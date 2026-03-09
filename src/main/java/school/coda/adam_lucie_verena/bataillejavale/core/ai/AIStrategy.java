@@ -7,6 +7,7 @@ import school.coda.adam_lucie_verena.bataillejavale.core.model.Coordinate;
  * Interface définissant le contrat de stratégie pour l'intelligence artificielle.
  * Elle permet d'implémenter différentes logiques de tir (aléatoire, tactique, etc.)
  * en fonction du niveau de difficulté choisi.
+ * @see <a href="https://refactoring.guru/fr/design-patterns/strategy">Strategy Design Pattern</a>
  */
 public interface AIStrategy {
 

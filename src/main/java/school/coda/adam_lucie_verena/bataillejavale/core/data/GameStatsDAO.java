@@ -12,6 +12,7 @@ import java.sql.SQLException;
  * de PostgreSQL. Elle permet d'archiver les performances (précision, tirs, résultat)
  * pour établir des classements ultérieurs.
  * </p>
+ * @see <a href="https://martinfowler.com/eaaCatalog/tableDataGateway.html">DAO</a>
  */
 public class GameStatsDAO {
 

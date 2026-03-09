@@ -57,7 +57,7 @@ public class Board {
      * @param coord La coordonnée à tester.
      * @return {@code true} si la coordonnée est valide.
      */
-    public boolean isWithinBounds(Coordinate coord) {
+    private boolean isWithinBounds(Coordinate coord) {
         return coord.x() < 0 || coord.x() >= width ||
                 coord.y() < 0 || coord.y() >= height;
     }
@@ -69,7 +69,7 @@ public class Board {
      * @param newShip Le navire à tester.
      * @return {@code true} si le placement est autorisé.
      */
-    public boolean canPlaceShip(Ship newShip) {
+    private boolean canPlaceShip(Ship newShip) {
         for (Coordinate coord : newShip.getOccupiedCoordinates()) {
             // 1. Vérification des bords
             if (isWithinBounds(coord)) {
@@ -92,7 +92,7 @@ public class Board {
      * @param ship Le navire à ajouter.
      * @return {@code true} si l'ajout a réussi.
      */
-    public boolean addShip(Ship ship) {
+    private boolean addShip(Ship ship) {
         if (canPlaceShip(ship)) {
             ships.add(ship);
             return true;
