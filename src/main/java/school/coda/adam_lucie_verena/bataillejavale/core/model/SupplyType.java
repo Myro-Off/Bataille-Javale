@@ -8,13 +8,10 @@ public enum SupplyType {
 
     /** Torpille à fragmentation : Attaque de zone puissante. */
     FRAGMENTED_TORPEDO("Torpille à fragmentation", 50, 1),
-
     /** Tir fumigène : Cache une zone de la grille adverse. */
     SMOKE_SHOT("Tir fumigène", 50, 2),
-
     /** Raid aérien : Frappe aléatoire sur plusieurs cases. */
     AIR_RAID("Raid aérien", 40, 1),
-
     /** Bombe banane : Projectile rebondissant ou à effet spécial. */
     BANANA_BOMB("Bombe banane", 55, 1);
 
@@ -36,10 +33,8 @@ public enum SupplyType {
 
     /** @return Le nom lisible du bonus. */
     public String getLabel() { return label; }
-
     /** @return Le poids pour le tirage aléatoire. */
     public int getWeight() { return weight; }
-
     /** @return Le nombre de tirs autorisés avec ce bonus. */
     public int getAmmoCount() { return ammoCount; }
 }

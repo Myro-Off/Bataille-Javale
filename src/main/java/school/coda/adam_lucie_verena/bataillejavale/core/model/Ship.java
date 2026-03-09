@@ -1,37 +1,62 @@
 package school.coda.adam_lucie_verena.bataillejavale.core.model;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Représente un navire concret positionné sur la grille de jeu.
- * Cette classe gère le calcul de sa zone d'occupation et son état de santé.
+ * Modèle représentant un navire de guerre positionné sur la grille.
+ * <p>
+ * Un navire est défini par son type (déterminant sa taille), sa coordonnée d'origine
+ * et son orientation. Il gère dynamiquement ses segments occupés et son état d'intégrité
+ * (nombre d'impacts reçus).
+ * </p>
  */
 public class Ship {
+
+    // ------------------------------------------------------------------------------------------
+    // ATTRIBUTS
+    // ------------------------------------------------------------------------------------------
+
+    /** Le modèle technique du navire (Porte-avions, Croiseur, etc.). */
     private final ShipType type;
+    /** Le point d'ancrage initial (la "proue") du navire sur la grille. */
     private final Coordinate startCoordinate;
+    /** L'axe de déploiement (Horizontal ou Vertical). */
     private final Orientation orientation;
-    private final Set<Coordinate> occupiedCoordinates;
-    private int hitsReceived;
+    /** Liste exhaustive des coordonnées occupées par le navire. */
+    private final List<Coordinate> occupiedCoordinates;
+    /** Liste des coordonnées ayant subi un impact de tir. */
+    private final List<Coordinate> hits;
+
+    // ------------------------------------------------------------------------------------------
+    // CONSTRUCTEUR
+    // ------------------------------------------------------------------------------------------
 
     /**
-     * Crée un navire et calcule instantanément toutes les cases qu'il occupe.
-     * * @param type Le modèle du navire (définit sa taille).
-     * @param startCoordinate La position de la première case du navire.
-     * @param orientation Le sens de déploiement (Horizontal ou Vertical).
+     * Construit un navire et calcule immédiatement son emprise spatiale sur la grille.
+     *
+     * @param type            Le type de navire définissant sa longueur.
+     * @param startCoordinate La coordonnée de départ.
+     * @param orientation     Le sens de déploiement.
      */
     public Ship(ShipType type, Coordinate startCoordinate, Orientation orientation) {
         this.type = type;
         this.startCoordinate = startCoordinate;
         this.orientation = orientation;
-        this.occupiedCoordinates = new HashSet<>();
-        this.hitsReceived = 0;
+        this.occupiedCoordinates = new ArrayList<>();
+        this.hits = new ArrayList<>();
 
+        // Calcul automatique des segments lors de l'instanciation
         calculateOccupiedCoordinates();
     }
 
+    // ------------------------------------------------------------------------------------------
+    // LOGIQUE INTERNE
+    // ------------------------------------------------------------------------------------------
+
     /**
-     * Remplit l'ensemble des coordonnées occupées en fonction de la taille du navire.
+     * Calcule et stocke l'ensemble des coordonnées occupées par le navire
+     * en fonction de son point de départ, de sa taille et de son orientation.
      */
     private void calculateOccupiedCoordinates() {
         for (int i = 0; i < type.getSize(); i++) {
@@ -41,41 +66,58 @@ public class Ship {
         }
     }
 
+    // ------------------------------------------------------------------------------------------
+    // MÉTHODES DE JEU (LOGIQUE MÉTIER)
+    // ------------------------------------------------------------------------------------------
+
     /**
-     * Détermine si un tir ennemi à une position donnée impacte ce navire.
-     * @param target La coordonnée ciblée par l'attaquant.
-     * @return true si le navire est touché sur l'une de ses cases.
+     * Détermine si le navire occupe une coordonnée spécifique.
+     *
+     * @param coord La coordonnée à vérifier.
+     * @return {@code true} si la case fait partie du navire.
      */
-    public boolean isHit(Coordinate target) {
-        if (occupiedCoordinates.contains(target)) {
-            hitsReceived++;
+    public boolean isAt(Coordinate coord) {
+        return occupiedCoordinates.contains(coord);
+    }
+
+    /**
+     * Enregistre un impact sur le navire si la cible est valide.
+     * <p>
+     * Un impact n'est comptabilisé que si la coordonnée appartient au navire
+     * et n'a pas déjà été touchée précédemment.
+     * </p>
+     *
+     * @param coord La coordonnée visée par le tir.
+     * @return {@code true} si le navire a été endommagé par ce tir.
+     */
+    public boolean takeHit(Coordinate coord) {
+        if (isAt(coord) && !hits.contains(coord)) {
+            hits.add(coord);
             return true;
         }
         return false;
     }
 
     /**
-     * Vérifie si le navire a été totalement détruit.
-     * @return true si le nombre de touches est égal à la taille du navire.
+     * Vérifie l'état de destruction du navire.
+     *
+     * @return {@code true} si le nombre d'impacts est égal à la taille du navire.
      */
     public boolean isSunk() {
-        return hitsReceived >= type.getSize();
+        return hits.size() >= type.getSize();
     }
 
-    // --- ACCESSEURS (GETTERS) ---
+    // ------------------------------------------------------------------------------------------
+    // ACCESSEURS (GETTERS)
+    // ------------------------------------------------------------------------------------------
 
-    /** @return Le type de navire (ex: Porte-avions, Destroyer). */
-    public ShipType getType() { return type; }
+    /** @return La liste des coordonnées constituant le corps du navire. */
+    public List<Coordinate> getOccupiedCoordinates() {
+        return occupiedCoordinates;
+    }
 
-    /** @return La coordonnée de départ du navire (utile pour l'affichage graphique). */
-    public Coordinate getStartCoordinate() { return startCoordinate; }
-
-    /** @return L'orientation choisie lors du placement. */
-    public Orientation getOrientation() { return orientation; }
-
-    /** @return L'ensemble des cases (x,y) actuellement couvertes par le navire. */
-    public Set<Coordinate> getOccupiedCoordinates() { return occupiedCoordinates; }
-
-    /** @return Le nombre total d'impacts reçus par ce navire. */
-    public int getHitsReceived() { return hitsReceived; }
+    /** @return Le type (classe) du navire. */
+    public ShipType getType() {
+        return type;
+    }
 }

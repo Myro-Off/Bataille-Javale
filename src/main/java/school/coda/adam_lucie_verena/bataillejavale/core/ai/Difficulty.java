@@ -11,13 +11,11 @@ public enum Difficulty {
      * Elle ne possède aucune mémoire des coups précédents.
      */
     DEBUTANT("Débutant"),
-
     /**
      * Mode Normal : L'IA utilise l'algorithme "Hunt & Target".
      * Elle cherche au hasard, mais s'acharne sur les cases adjacentes dès qu'elle touche un navire.
      */
     NORMALE("Normale"),
-
     /**
      * Mode Expert : L'IA utilise des calculs de probabilités et analyse la taille des navires
      * restants pour optimiser ses chances de coup au but.

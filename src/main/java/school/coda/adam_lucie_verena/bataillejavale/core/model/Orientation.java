@@ -6,12 +6,11 @@ package school.coda.adam_lucie_verena.bataillejavale.core.model;
  * l'ensemble des coordonnées occupées.
  */
 public enum Orientation {
-    /** * Déploiement vers la droite.
+    /** Déploiement vers la droite.
      * Les cases sont ajoutées en augmentant la valeur de X.
      */
     HORIZONTAL,
-
-    /** * Déploiement vers le bas.
+    /** Déploiement vers le bas.
      * Les cases sont ajoutées en augmentant la valeur de Y.
      */
     VERTICAL
