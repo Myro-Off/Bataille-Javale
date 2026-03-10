@@ -1,7 +1,7 @@
 package school.coda.adam_lucie_verena.bataillejavale.ui;
 
 import com.almasb.fxgl.dsl.FXGL;
-import javafx.scene.layout.GridPane;
+import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Board;
@@ -10,14 +10,14 @@ import school.coda.adam_lucie_verena.bataillejavale.core.model.GameConfig;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Ship;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Orientation;
 /**
- * Composant graphique représentant une grille de bataille navale sous forme de {@link GridPane}.
+ * Composant graphique représentant une grille de bataille navale sous forme de {@link Group}.
  * <p>
  * Cette classe assure la liaison visuelle entre le modèle de données {@link Board} et
  * l'interface utilisateur. Elle gère l'affichage des cellules, des navires et des impacts
  * de tirs (réussis ou manqués).
  * </p
  */
-public class GameView extends GridPane {
+public class GameView extends Group {
 
     // ------------------------------------------------------------------------------------------
     // CONSTANTES ET ATTRIBUTS
@@ -54,7 +54,7 @@ public class GameView extends GridPane {
     // ------------------------------------------------------------------------------------------
 
     /**
-     * Construit dynamiquement la grille de rectangles dans le {@link GridPane}.
+     * Construit dynamiquement la grille de rectangles dans le {@link Group}.
      * <p>
      * Chaque cellule est stockée dans la matrice {@code cells} pour permettre des
      * mises à jour ultérieures sans reconstruire toute l'interface.
@@ -65,6 +65,9 @@ public class GameView extends GridPane {
             for (int y = 0; y < config.gridHeight(); y++) {
                 Rectangle cell = new Rectangle(CELL_SIZE, CELL_SIZE);
 
+                // Positionnement manuel
+                cell.setX(x * CELL_SIZE);
+                cell.setY(y * CELL_SIZE);
                 // Style par défaut : Bleu mer avec bordure blanche fine
                 cell.setFill(Color.web("#2b6da3"));
                 cell.setStroke(Color.WHITE);
@@ -74,7 +77,7 @@ public class GameView extends GridPane {
                 cells[x][y] = cell;
 
                 // Ajout au GridPane (Paramètres : Node, Colonne, Ligne)
-                this.add(cell, x, y);
+                this.getChildren().add(cell);
             }
         }
     }
@@ -134,24 +137,38 @@ public class GameView extends GridPane {
      * @param ship Le navire à afficher.
      */
     private void addShipTexture(Ship ship) {
-        // 1. Récupération du nom de fichier basé sur le type (ex: "carrier.svg")
-        String imageName = ship.getType().name().toLowerCase() + ".svg";
-        try{
-        System.out.println(imageName);
+        // 1. Récupération du nom de fichier basé sur le type (ex: "carrier.png")
+        String imageName = ship.getType().name().toLowerCase() + ".png";
+
+        // 2. Chargement de la texture via FXGL
         var texture = FXGL.texture(imageName);
-        double x = ship.getOccupiedCoordinates().getFirst().x() + getCellSize();
-        double y = ship.getOccupiedCoordinates().getFirst().y() + getCellSize();
+
+        // 3. Positionnement (Coordonnée d'origine * taille d'une cellule)
+        double x = ship.getOccupiedCoordinates().getFirst().x() * getCellSize();
+        double y = ship.getOccupiedCoordinates().getFirst().y() * getCellSize();
+
         texture.setTranslateX(x);
         texture.setTranslateY(y);
-        if (ship.getOrientation() == Orientation.HORIZONTAL){
-            texture.setRotate(90);
-        }
-        this.getChildren().add(texture);
-        System.out.println("Texture ajoutée à : " + x + "," + y);
 
-        } catch (IllegalArgumentException e) {
-            System.err.println("Erreur : Impossible de trouver l'image dans assets/textures/ !");
+        // 4. Gestion de l'orientation
+        if (ship.getOrientation() == Orientation.HORIZONTAL) {
+            // 1. On définit l'axe de rotation sur le coin haut-gauche (0,0)
+            texture.setRotationAxis(javafx.geometry.Point3D.ZERO.add(0, 0, 1));
+
+            // 2. On pivote de 90 degrés
+            texture.setRotate(90);
+
+            // 3. On repositionne correctement l'image
+            texture.setTranslateX(x + getCellSize());
+            texture.setTranslateY(y);
+        } else {
+            // Cas vertical : aucune rotation, positionnement direct
+            texture.setTranslateX(x);
+            texture.setTranslateY(y);
         }
+
+        // 5. Ajout au GridPane
+        this.getChildren().add(texture);
     }
 
 
