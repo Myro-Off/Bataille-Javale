@@ -7,68 +7,50 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * Gestionnaire central de la connectivité à la base de données PostgreSQL.
- * <p>
- * Cette classe utilise la bibliothèque {@link Dotenv} pour charger les identifiants
- * de connexion depuis un fichier {@code .env} externe, garantissant la sécurité
- * des informations sensibles (URL, utilisateur, mot de passe).
- * </p>
+ * Gestionnaire de connectivité PostgreSQL.
  */
 public class DatabaseManager {
 
-    // ------------------------------------------------------------------------------------------
-    // CONSTANTES ET CONFIGURATION
-    // ------------------------------------------------------------------------------------------
-
-    /** Logger officiel pour le suivi des opérations de base de données. */
     private static final Logger log = Logger.get(DatabaseManager.class);
-    /** Chargeur de variables d'environnement. */
-    private static final Dotenv dotenv = Dotenv.load();
-    /** Point d'accès (JDBC URL) à la base de données PostgreSQL. */
-    private static final String URL = dotenv.get("DB_URL");
-    /** Identifiant de l'utilisateur de la base de données. */
-    private static final String USER = dotenv.get("DB_USER");
-    /** Mot de passe associé à l'utilisateur. */
-    private static final String PASS = dotenv.get("DB_PASS");
+    private static final Dotenv dotenv;
 
-    // ------------------------------------------------------------------------------------------
-    // GESTION DE LA CONNEXION
-    // ------------------------------------------------------------------------------------------
+    // Variables de configuration
+    private static final String URL;
+    private static final String USER;
+    private static final String PASS;
+
+    static {
+        // Chargement sécurisé du .env
+        dotenv = Dotenv.configure().ignoreIfMissing().load();
+
+        // Récupération des valeurs avec des valeurs par défaut pour le Docker
+        URL = dotenv.get("DB_URL", "jdbc:postgresql://localhost:5432/bataille_javale");
+        USER = dotenv.get("DB_USER", "postgres");
+        PASS = dotenv.get("DB_PASS", "AVerySecurePassword");
+    }
 
     /**
-     * Établit et retourne une nouvelle connexion active à PostgreSQL.
-     * <p>
-     * Cette méthode s'assure du chargement du driver JDBC avant de tenter
-     * l'authentification auprès du serveur.
-     * </p>
-     *
-     * @return Une instance de {@link Connection} active.
-     * @throws SQLException Si l'URL est incorrecte ou si l'accès est refusé.
+     * @return Une connexion active.
      */
-    public Connection getConnection() throws SQLException {
+    public static Connection getConnection() throws SQLException {
         try {
-            Class.forName("org.postgresql.Driver");
             return DriverManager.getConnection(URL, USER, PASS);
-        } catch (ClassNotFoundException e) {
-            log.fatal("Driver PostgreSQL (JAR) introuvable dans le classpath !");
-            throw new SQLException("Impossible de charger le driver JDBC", e);
+        } catch (SQLException e) {
+            log.fatal("Erreur de connexion SQL : " + e.getMessage());
+            throw e;
         }
     }
 
     /**
-     * Vérifie la viabilité de la connexion (Utile lors du démarrage de l'application).
-     * <p>
-     * En cas de succès, un log de niveau INFO est généré. En cas d'échec,
-     * un avertissement est envoyé au logger.
-     * </p>
+     * Teste la connexion au démarrage.
      */
-    public void testConnection() {
+    public static void testConnection() {
         try (Connection conn = getConnection()) {
             if (conn != null && !conn.isClosed()) {
-                log.info("Connexion établie avec succès à la base de données : " + URL);
+                log.info("⚓ Connexion validée vers : " + URL);
             }
         } catch (SQLException e) {
-            log.warning("Échec de la connexion test à la base de données : " + e.getMessage());
+            log.warning("🚩 Base de données injoignable. Vérifiez Docker !");
         }
     }
 }

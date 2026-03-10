@@ -8,6 +8,7 @@ import com.almasb.fxgl.dsl.FXGL;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import org.jetbrains.annotations.NotNull;
+import school.coda.adam_lucie_verena.bataillejavale.core.data.DatabaseManager;
 import school.coda.adam_lucie_verena.bataillejavale.core.engine.GameController;
 import school.coda.adam_lucie_verena.bataillejavale.core.data.GameStatsDAO;
 import school.coda.adam_lucie_verena.bataillejavale.core.data.PlayerDAO;
@@ -78,6 +79,7 @@ public class DisplayGame extends GameApplication {
         enemyBoard.placeShipsRandomly();
 
         controller = new GameController(playerBoard, enemyBoard);
+        DatabaseManager.testConnection();
 
         // Identification en base de données
         this.currentPlayerId = new PlayerDAO().getOrCreatePlayer(config.player1Name());
