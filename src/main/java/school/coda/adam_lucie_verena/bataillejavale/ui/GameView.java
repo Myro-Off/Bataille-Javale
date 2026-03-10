@@ -1,5 +1,6 @@
 package school.coda.adam_lucie_verena.bataillejavale.ui;
 
+import com.almasb.fxgl.dsl.FXGL;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -7,14 +8,14 @@ import school.coda.adam_lucie_verena.bataillejavale.core.model.Board;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Coordinate;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.GameConfig;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Ship;
-
+import school.coda.adam_lucie_verena.bataillejavale.core.model.Orientation;
 /**
  * Composant graphique représentant une grille de bataille navale sous forme de {@link GridPane}.
  * <p>
  * Cette classe assure la liaison visuelle entre le modèle de données {@link Board} et
  * l'interface utilisateur. Elle gère l'affichage des cellules, des navires et des impacts
  * de tirs (réussis ou manqués).
- * </p>
+ * </p
  */
 public class GameView extends GridPane {
 
@@ -78,11 +79,6 @@ public class GameView extends GridPane {
         }
     }
 
-    private void addShipTextures(Ship ship){
-        String imageName = ship.getType().name().toLowerCase() +".svg";
-        int positionPixel = getOccupiedCoordinates() * getCellSize();
-    }
-
     // ------------------------------------------------------------------------------------------
     // MÉTHODES PUBLIQUES : MISE À JOUR DE L'AFFICHAGE
     // ------------------------------------------------------------------------------------------
@@ -105,6 +101,21 @@ public class GameView extends GridPane {
             cells[miss.x()][miss.y()].setFill(Color.web("#1a4a73"));
             cells[miss.x()][miss.y()].setOpacity(0.5);
         }
+
+        // -----------------------------------------------------------------------------------------
+        // TODO: MISSION "EFFETS SPÉCIAUX"
+        // -----------------------------------------------------------------------------------------
+        // OBJECTIF : Faire apparaître des étincelles rouges quand un navire est touché.
+        //
+        // ÉTAPES :
+        // 1. Explorer la classe ParticleEmitter de FXGL.
+        // 2. Quand une cellule passe en rouge (HIT), créer un émetteur à ces coordonnées.
+        // 3. Configurer l'émetteur : couleur (RED), taille, et durée de vie très courte.
+        //
+        // TIPS :
+        // - Ne pas créer trop de particules à la fois pour ne pas ralentir le jeu.
+        // - Utiliser les coordonnées de la cellule (x * CELL_SIZE) pour placer l'effet pile au bon endroit.
+
     }
 
     /**
@@ -115,8 +126,34 @@ public class GameView extends GridPane {
      * </p>
      */
     public void revealShips() {
-        board.getShips().forEach(this::addShipTextures);
+        board.getShips().forEach(this::addShipTexture);
     }
+
+    /**
+     * Ajoute la texture d'un navire spécifique par-dessus les cellules.
+     * @param ship Le navire à afficher.
+     */
+    private void addShipTexture(Ship ship) {
+        // 1. Récupération du nom de fichier basé sur le type (ex: "carrier.svg")
+        String imageName = ship.getType().name().toLowerCase() + ".svg";
+        try{
+        System.out.println(imageName);
+        var texture = FXGL.texture(imageName);
+        double x = ship.getOccupiedCoordinates().getFirst().x() + getCellSize();
+        double y = ship.getOccupiedCoordinates().getFirst().y() + getCellSize();
+        texture.setTranslateX(x);
+        texture.setTranslateY(y);
+        if (ship.getOrientation() == Orientation.HORIZONTAL){
+            texture.setRotate(90);
+        }
+        this.getChildren().add(texture);
+        System.out.println("Texture ajoutée à : " + x + "," + y);
+
+        } catch (IllegalArgumentException e) {
+            System.err.println("Erreur : Impossible de trouver l'image dans assets/textures/ !");
+        }
+    }
+
 
 
     // ------------------------------------------------------------------------------------------
