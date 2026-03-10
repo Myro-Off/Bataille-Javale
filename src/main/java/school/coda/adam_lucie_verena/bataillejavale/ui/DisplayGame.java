@@ -120,7 +120,7 @@ public class DisplayGame extends GameApplication {
         // -----------------------------------------------------------------------------------------
         // TODO: MISSION "TABLEAU DE BORD TACTIQUE"
         // -----------------------------------------------------------------------------------------
-        // OBJECTIF : Créer un dashboard pro qui affiche les Tirs, les Touches et la Précision.
+        // OBJECTIF : Créer un dashboard pro qui affiche les Tirs, les Touches et la Précision et le Tour
         //
         // ÉTAPES :
         //
@@ -270,9 +270,9 @@ public class DisplayGame extends GameApplication {
     private void shakeUI(javafx.scene.Node node) {
         double originalX = node.getTranslateX();
         var timeline = new javafx.animation.Timeline(
-                new javafx.animation.KeyFrame(javafx.util.Duration.millis(50),  new javafx.animation.KeyValue(node.translateXProperty(), originalX + 7)),
-                new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), new javafx.animation.KeyValue(node.translateXProperty(), originalX - 7)),
-                new javafx.animation.KeyFrame(javafx.util.Duration.millis(150), new javafx.animation.KeyValue(node.translateXProperty(), originalX + 5)),
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(50),  new javafx.animation.KeyValue(node.translateXProperty(), originalX + 4)),
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), new javafx.animation.KeyValue(node.translateXProperty(), originalX - 4)),
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(150), new javafx.animation.KeyValue(node.translateXProperty(), originalX + 2)),
                 new javafx.animation.KeyFrame(javafx.util.Duration.millis(200), new javafx.animation.KeyValue(node.translateXProperty(), originalX))
         );
         timeline.play();
