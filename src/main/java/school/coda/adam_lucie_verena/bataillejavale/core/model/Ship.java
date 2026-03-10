@@ -88,14 +88,11 @@ public class Ship {
      * </p>
      *
      * @param coord La coordonnée visée par le tir.
-     * @return {@code true} si le navire a été endommagé par ce tir.
      */
-    public boolean takeHit(Coordinate coord) {
+    public void takeHit(Coordinate coord) {
         if (isAt(coord) && !hits.contains(coord)) {
             hits.add(coord);
-            return true;
         }
-        return false;
     }
 
     /**
@@ -111,11 +108,14 @@ public class Ship {
     // ACCESSEURS (GETTERS)
     // ------------------------------------------------------------------------------------------
 
+    /** @return L'orientation (HORIZONTAL ou VERTICAL) pour l'affichage des textures */
+    public Orientation getOrientation() {
+        return orientation;
+    }
     /** @return La liste des coordonnées constituant le corps du navire. */
     public List<Coordinate> getOccupiedCoordinates() {
         return occupiedCoordinates;
     }
-
     /** @return Le type (classe) du navire. */
     public ShipType getType() {
         return type;

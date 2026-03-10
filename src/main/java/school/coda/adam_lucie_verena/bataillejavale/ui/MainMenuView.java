@@ -90,4 +90,19 @@ public class MainMenuView extends StackPane {
         content.getChildren().addAll(title, btnPlay, btnMulti, btnStats, btnSettings, btnQuit);
         return content;
     }
+    /* =========================================================================================
+     * 📖 TODO : LE REGISTRE DE L'AMIRAUTÉ (UI MENU)
+     * =========================================================================================
+     * OBJECTIF : Afficher la liste des succès (verrouillés/déverrouillés) depuis le menu.
+     *
+     * ÉTAPES :
+     * 1. Créer une interface 'AchievementView' (VBox ou GridPane).
+     * 2. Parcourir ton Enum 'AchievementType' et afficher chaque ligne.
+     * 3. Style visuel :
+     * - Si débloqué : Texte en CYAN brillant + icône.
+     * - Si verrouillé : Texte en GRIS sombre + cadenas.
+     *
+     * RÉSULTAT ATTENDU :
+     * Une fenêtre élégante qui donne envie au joueur de compléter tous les défis.
+     * ========================================================================================= */
 }

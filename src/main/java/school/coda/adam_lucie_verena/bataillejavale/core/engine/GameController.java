@@ -4,6 +4,7 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.logging.Logger;
 import school.coda.adam_lucie_verena.bataillejavale.core.events.GameOverEvent;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.*;
+
 import java.util.Random;
 
 /**
@@ -14,20 +15,31 @@ import java.util.Random;
  * </p>
  */
 public class GameController {
-    /** Logger officiel pour le suivi du moteur de jeu. */
+    /**
+     * Logger officiel pour le suivi du moteur de jeu.
+     */
     private static final Logger log = Logger.get(GameController.class);
-    /** État actuel de la partie (Tour du joueur, de l'IA, etc.). */
+    /**
+     * État actuel de la partie (Tour du joueur, de l'IA, etc.).
+     */
     private GameState currentState;
-    /** Plateau de jeu du joueur humain (cible de l'IA). */
+    /**
+     * Plateau de jeu du joueur humain (cible de l'IA).
+     */
     private final Board playerBoard;
-    /** Plateau de jeu de l'IA (cible du joueur). */
+    /**
+     * Plateau de jeu de l'IA (cible du joueur).
+     */
     private final Board enemyBoard;
-    /** Générateur aléatoire pour les décisions de l'IA. */
+    /**
+     * Générateur aléatoire pour les décisions de l'IA.
+     */
     private final Random random = new Random();
 
     /**
      * Initialise le contrôleur avec les deux plateaux de jeu.
      * Le tour commence par défaut avec le joueur.
+     *
      * @param playerBoard Plateau du joueur.
      * @param enemyBoard  Plateau de l'adversaire.
      */
@@ -43,6 +55,7 @@ public class GameController {
      * Si c'est bien le tour du joueur, le tir est appliqué sur la grille ennemie
      * et l'état passe au tour de l'ordinateur.
      * </p>
+     *
      * @param coord Coordonnée cible du tir.
      * @return {@code true} si un navire a été touché, {@code false} sinon.
      */
@@ -60,7 +73,32 @@ public class GameController {
 
         return hit;
     }
+    /* =========================================================================================
+     * 🔊 TODO : SONAR & EXPLOSIONS (SFX)
+     * =========================================================================================
+     * OBJECTIF : Ajouter une identité sonore aux tirs pour renforcer l'immersion.
+     *
+     * ÉTAPES :
+     * 1. Dépôt des sons : Placer "hit.wav" et "miss.wav" dans assets/sounds/.
+     * 2. Logique : Repérer dans handlePlayerShot() le moment où 'hit' est calculé.
+     * 3. Commande FXGL : FXGL.play(hit ? "hit.wav" : "miss.wav");
+     * ========================================================================================= */
 
+    /* =========================================================================================
+     * 🔔 TODO : ALERTE RADAR (NOTIFICATIONS)
+     * =========================================================================================
+     * OBJECTIF : Faire apparaître une notification "flash" quand un succès est débloqué.
+     *
+     * ÉTAPES :
+     * 1. Créer une méthode 'unlockAchievement(AchievementType type)'.
+     * 2. Utiliser le service natif de FXGL pour l'affichage :
+     * -> FXGL.getNotificationService().pushNotification("SUCCÈS : " + type.getTitle());
+     * 3. Jouer un son spécial (ex: "level_up.wav") pour le feedback sonore.
+     *
+     * TIPS :
+     * - Attention : Vérifie bien que le succès n'est pas déjà débloqué pour éviter de
+     * spammer le joueur à chaque tir !
+     * ========================================================================================= */
     /**
      * Exécute la logique de tir de l'Intelligence Artificielle.
      * <p>
@@ -108,9 +146,17 @@ public class GameController {
         }
     }
 
-    /** @return L'état actuel de la machine à états du jeu. */
-    public GameState getCurrentState() { return currentState; }
+    /**
+     * @return L'état actuel de la machine à états du jeu.
+     */
+    public GameState getCurrentState() {
+        return currentState;
+    }
 
-    /** @param state Le nouvel état à appliquer au contrôleur. */
-    public void setCurrentState(GameState state) { this.currentState = state; }
+    /**
+     * @param state Le nouvel état à appliquer au contrôleur.
+     */
+    public void setCurrentState(GameState state) {
+        this.currentState = state;
+    }
 }

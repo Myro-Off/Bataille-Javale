@@ -98,8 +98,57 @@ public class DisplayGame extends GameApplication {
         setupPlayerView();
         setupEnemyView();
         setupMainMenu();
-    }
+        // -----------------------------------------------------------------------------------------
+        // TODO: MISSION "VISEUR TACTIQUE"
+        // -----------------------------------------------------------------------------------------
+        // OBJECTIF : Remplacer la flèche de la souris par une image de viseur.
+        //
+        // ÉTAPES :
+        // 1. AJOUT DE L'IMAGE : Place un fichier "viseur.png" dans "assets/textures/".
+        // 2. CODE DANS initUI() :
+        //    - Tape : getGameScene().setCursor("viseur.png", new Point2D(16, 16));
+        //
+        // TIPS :
+        // - Pourquoi "Point2D(16, 16)" ? Par défaut, le clic se fait sur le coin haut-gauche (0,0).
+        //   Pour un viseur, on veut que le "vrai clic" soit pile au milieu de l'image.
+        //   Si ton image fait 32x32 pixels, le milieu est à 16x16.
+        // - Le résultat attendu : Dès que le jeu se lance, ta souris disparaît au profit du viseur.
+        // -----------------------------------------------------------------------------------------
 
+        // -----------------------------------------------------------------------------------------
+        // TODO: MISSION "TABLEAU DE BORD TACTIQUE"
+        // -----------------------------------------------------------------------------------------
+        // OBJECTIF : Créer un dashboard pro qui affiche les Tirs, les Touches et la Précision.
+        //
+        // ÉTAPES :
+        //
+        // 1. INITIALISER LE "CERVEAU" (dans initGameVars) :
+        //    - Il nous faut 3 tiroirs dans la mémoire (vars) :
+        //      vars.put("shots", 0);    // Nombre total de clics
+        //      vars.put("hits", 0);     // Nombre de fois qu'on a touché un bateau
+        //      vars.put("accuracy", 0); // Pourcentage de réussite
+        //
+        // 2. DESSINER L'INTERFACE (dans initUI) :
+        //    - Place les textes les uns sous les autres (joue avec les chiffres Y pour l'espacement) :
+        //      addVarText("TIRS TOTAL :", 20, 50, "shots");
+        //      addVarText("TOUCHÉS    :", 20, 80, "hits");
+        //      addVarText("PRÉCISION  :", 20, 110, "accuracy"); // On ajoutera "%" plus tard
+        //
+        // 3. LA LOGIQUE DE CALCUL (dans ton code de tir) :
+        //    - À chaque clic de souris : inc("shots", +1);
+        //    - Si le tir est réussi : inc("hits", +1);
+        //    - ENSUITE, mets à jour la précision avec cette formule magique :
+        //      double acc = (getd("hits") / getd("shots")) * 100;
+        //      set("accuracy", (int)acc); // On transforme en nombre entier pour faire propre.
+        //
+        // TIPS POUR RÉUSSIR :
+        // - Pourquoi "getd" ? C'est pour récupérer la valeur en tant que "double" (nombre à virgule)
+        //   sinon la division en Java fera toujours 0 !
+        // - Formule de précision : $$ \text{Accuracy} = \frac{\text{Hits}}{\text{Shots}} \times 100 $$
+        // - Le résultat attendu : Un bloc de stats qui se met à jour dynamiquement. C'est ça qui
+        //   servira à alimenter ta base de données à la fin de la partie !
+        // -----------------------------------------------------------------------------------------
+    }
     // ------------------------------------------------------------------------------------------
     // MÉTHODES PRIVÉES : CONSTRUCTION DE L'UI
     // ------------------------------------------------------------------------------------------
@@ -178,12 +227,16 @@ public class DisplayGame extends GameApplication {
                 enemyBoard.getMissedShots().contains(target);
 
         if (!wasAlreadyShot) {
+            boolean isHit = controller.handlePlayerShot(target);
             controller.handlePlayerShot(target);
             enemyView.updateDisplay();
 
             if (enemyBoard.allShipsSunk()) {
                 FXGL.getEventBus().fireEvent(new GameOverEvent(true));
                 return;
+            }
+            if (isHit) {
+                shakeUI(enemyView);
             }
 
             controller.aiTurn();
@@ -206,6 +259,21 @@ public class DisplayGame extends GameApplication {
         new GameStatsDAO().saveGameResult(currentPlayerId, isVictory ? "WIN" : "LOSS", shots, hits);
 
         FXGL.addUINode(new GameOverView(isVictory, shots, hits, () -> FXGL.getGameController().startNewGame()));
+    }
+
+    /**
+     * Fait vibrer un composant de l'interface pour simuler un impact.
+     * @param node Le composant à secouer (playerView ou enemyView).
+     */
+    private void shakeUI(javafx.scene.Node node) {
+        double originalX = node.getTranslateX();
+        var timeline = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(50),  new javafx.animation.KeyValue(node.translateXProperty(), originalX + 7)),
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(100), new javafx.animation.KeyValue(node.translateXProperty(), originalX - 7)),
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(150), new javafx.animation.KeyValue(node.translateXProperty(), originalX + 5)),
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(200), new javafx.animation.KeyValue(node.translateXProperty(), originalX))
+        );
+        timeline.play();
     }
 
     /**

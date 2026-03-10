@@ -57,7 +57,7 @@ public class Board {
      * @param coord La coordonnée à tester.
      * @return {@code true} si la coordonnée est valide.
      */
-    private boolean isWithinBounds(Coordinate coord) {
+    public boolean isWithinBounds(Coordinate coord) {
         return coord.x() < 0 || coord.x() >= width ||
                 coord.y() < 0 || coord.y() >= height;
     }
