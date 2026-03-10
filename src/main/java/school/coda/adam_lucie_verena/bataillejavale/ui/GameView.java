@@ -6,6 +6,7 @@ import javafx.scene.shape.Rectangle;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Board;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Coordinate;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.GameConfig;
+import school.coda.adam_lucie_verena.bataillejavale.core.model.Ship;
 
 /**
  * Composant graphique représentant une grille de bataille navale sous forme de {@link GridPane}.
@@ -77,6 +78,11 @@ public class GameView extends GridPane {
         }
     }
 
+    private void addShipTextures(Ship ship){
+        String imageName = ship.getType().name().toLowerCase() +".svg";
+        int positionPixel = getOccupiedCoordinates() * getCellSize();
+    }
+
     // ------------------------------------------------------------------------------------------
     // MÉTHODES PUBLIQUES : MISE À JOUR DE L'AFFICHAGE
     // ------------------------------------------------------------------------------------------
@@ -109,8 +115,9 @@ public class GameView extends GridPane {
      * </p>
      */
     public void revealShips() {
-        board.getShips().forEach(ship -> ship.getOccupiedCoordinates().forEach(coord -> cells[coord.x()][coord.y()].setFill(Color.LIGHTGRAY)));
+        board.getShips().forEach(this::addShipTextures);
     }
+
 
     // ------------------------------------------------------------------------------------------
     // GETTERS
