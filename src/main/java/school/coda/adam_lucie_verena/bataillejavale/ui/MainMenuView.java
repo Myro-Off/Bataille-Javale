@@ -32,7 +32,7 @@ public class MainMenuView extends StackPane {
      */
     public MainMenuView(Runnable onPlay) {
         // Configuration de la taille pour recouvrir la fenêtre DisplayGame
-        setPrefSize(1000, 600);
+        this.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
 
         // 1. GÉNÉRATION DU FOND OPAQUE
         Rectangle background = createBackground();
@@ -59,7 +59,7 @@ public class MainMenuView extends StackPane {
                 new Stop(1, Color.web("#0a0a28"))  // Bleu marine sombre
         );
 
-        Rectangle bg = new Rectangle(1000, 600, gradient);
+        Rectangle bg = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight(), gradient);
         bg.setOpacity(1.0);
         return bg;
     }
@@ -82,7 +82,7 @@ public class MainMenuView extends StackPane {
 
         // Instanciation des boutons
         MenuButton btnPlay     = new MenuButton("JOUER SOLO", onPlay);
-        MenuButton btnMulti    = new MenuButton("MULTIJOUEUR (Bientôt)", () -> System.out.println("Online coming soon..."));
+        MenuButton btnMulti    = new MenuButton("MULTIJOUEUR", () -> System.out.println("Online coming soon..."));
         MenuButton btnStats    = new MenuButton("CLASSEMENT / STATS", () -> System.out.println("Ouverture du Leaderboard..."));
         MenuButton btnSettings = new MenuButton("OPTIONS", () -> System.out.println("Accès aux réglages..."));
         MenuButton btnQuit     = new MenuButton("QUITTER", () -> FXGL.getGameController().exit());

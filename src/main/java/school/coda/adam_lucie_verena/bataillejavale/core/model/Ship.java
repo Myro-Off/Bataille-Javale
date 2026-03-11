@@ -108,7 +108,9 @@ public class Ship {
     // ACCESSEURS (GETTERS)
     // ------------------------------------------------------------------------------------------
 
-    /** @return L'orientation (HORIZONTAL ou VERTICAL) pour l'affichage des textures */
+    /**
+     * @return L'orientation (HORIZONTAL ou VERTICAL) pour l'affichage des textures
+     */
     public Orientation getOrientation() {
         return orientation;
     }

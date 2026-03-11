@@ -113,7 +113,7 @@
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>
-                                school.coda.adam_lucie_verena.bataillejavale.ui.DisplayGame
+                                school.coda.adam_lucie_verena.bataillejavale.ui.BatailleJavaleApp
                             </mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>

@@ -15,19 +15,18 @@ import java.util.Random;
 public class Board {
 
     // ------------------------------------------------------------------------------------------
-    // ATTRIBUTS
+    // CONSTANTES & ATTRIBUTS
     // ------------------------------------------------------------------------------------------
 
-    /** Largeur de la grille (nombre de colonnes). */
+    private static final int MAX_GLOBAL_ATTEMPTS = 100;
+    private static final int MAX_LOCAL_ATTEMPTS = 200;
+
     private final int width;
-    /** Hauteur de la grille (nombre de lignes). */
     private final int height;
-    /** Liste des navires actuellement positionnés sur le plateau. */
-    private final List<Ship> ships;
-    /** Historique des coordonnées où un tir a touché un navire. */
-    private final List<Coordinate> hitShots;
-    /** Historique des coordonnées où un tir a fini dans l'eau. */
-    private final List<Coordinate> missedShots;
+
+    private final List<Ship> ships = new ArrayList<>();
+    private final List<Coordinate> hitShots = new ArrayList<>();
+    private final List<Coordinate> missedShots = new ArrayList<>();
 
     // ------------------------------------------------------------------------------------------
     // CONSTRUCTEUR
@@ -36,15 +35,12 @@ public class Board {
     /**
      * Initialise un nouveau plateau avec des dimensions spécifiques.
      *
-     * @param width  Largeur du plateau.
-     * @param height Hauteur du plateau.
+     * @param width  Largeur du plateau (colonnes).
+     * @param height Hauteur du plateau (lignes).
      */
     public Board(int width, int height) {
         this.width = width;
         this.height = height;
-        this.ships = new ArrayList<>();
-        this.hitShots = new ArrayList<>();
-        this.missedShots = new ArrayList<>();
     }
 
     // ------------------------------------------------------------------------------------------
@@ -52,12 +48,12 @@ public class Board {
     // ------------------------------------------------------------------------------------------
 
     /**
-     * Vérifie si une coordonnée se situe à l'intérieur des limites de la grille.
+     * Vérifie si une coordonnée se situe strictement à l'intérieur des limites de la grille.
      *
      * @param coord La coordonnée à tester.
-     * @return {@code true} si la coordonnée est valide.
+     * @return {@code true} si la coordonnée est valide (dans la grille).
      */
-    public boolean isWithinBounds(Coordinate coord) {
+    public boolean isNotWithinBounds(Coordinate coord) {
         return coord.x() < 0 || coord.x() >= width ||
                 coord.y() < 0 || coord.y() >= height;
     }
@@ -69,14 +65,15 @@ public class Board {
      * @param newShip Le navire à tester.
      * @return {@code true} si le placement est autorisé.
      */
-    private boolean canPlaceShip(Ship newShip) {
+    public boolean canPlaceShip(Ship newShip) {
         for (Coordinate coord : newShip.getOccupiedCoordinates()) {
-            // 1. Vérification des bords
-            if (isWithinBounds(coord)) {
+
+            // 1. Vérification des bords : Si une coordonnée est HORS limites -> Refus
+            if (isNotWithinBounds(coord)) {
                 return false;
             }
 
-            // 2. Vérification des collisions
+            // 2. Vérification des collisions : Si une coordonnée est déjà occupée -> Refus
             for (Ship existingShip : ships) {
                 if (existingShip.getOccupiedCoordinates().contains(coord)) {
                     return false;
@@ -87,44 +84,62 @@ public class Board {
     }
 
     /**
-     * Ajoute un navire au plateau après validation de sa position.
+     * Ajoute un navire au plateau après validation.
      *
-     * @param ship Le navire à ajouter.
-     * @return {@code true} si l'ajout a réussi.
+     * @param ship Le navire à poser.
+     * @return {@code true} si le placement a réussi.
      */
-    private boolean addShip(Ship ship) {
+    public boolean placeShip(Ship ship) {
         if (canPlaceShip(ship)) {
-            ships.add(ship);
-            return true;
+            return ships.add(ship);
         }
         return false;
     }
 
     /**
-     * Remplit le plateau en plaçant aléatoirement une flotte standard.
+     * Tente de placer toute la flotte de manière aléatoire.
      * <p>
-     * Utilise une boucle de sécurité pour garantir que chaque type de navire
-     * finit par trouver une place libre.
+     * Stratégie : Reset & Retry. Si un navire ne trouve pas de place,
+     * on vide le plateau et on recommence la distribution globale.
      * </p>
      */
     public void placeShipsRandomly() {
         Random random = new Random();
+        int globalAttempts = 0;
+        boolean success = false;
 
-        for (ShipType type : ShipType.values()) {
-            boolean placed = false;
-            while (!placed) {
-                int x = random.nextInt(width);
-                int y = random.nextInt(height);
-                Orientation orientation = random.nextBoolean() ?
-                        Orientation.HORIZONTAL : Orientation.VERTICAL;
+        while (!success && globalAttempts < MAX_GLOBAL_ATTEMPTS) {
+            this.ships.clear();
+            success = true;
 
-                Ship testShip = new Ship(type, new Coordinate(x, y), orientation);
+            for (ShipType type : ShipType.values()) {
+                boolean placed = false;
+                int localAttempts = 0;
 
-                if (canPlaceShip(testShip)) {
-                    this.addShip(testShip);
-                    placed = true;
+                while (!placed && localAttempts < MAX_LOCAL_ATTEMPTS) {
+                    int x = random.nextInt(this.width);
+                    int y = random.nextInt(this.height);
+                    Orientation orientation = random.nextBoolean() ?
+                            Orientation.HORIZONTAL : Orientation.VERTICAL;
+
+                    Ship testShip = new Ship(type, new Coordinate(x, y), orientation);
+
+                    if (placeShip(testShip)) {
+                        placed = true;
+                    }
+                    localAttempts++;
+                }
+
+                if (!placed) {
+                    success = false;
+                    break;
                 }
             }
+            globalAttempts++;
+        }
+
+        if (!success) {
+            System.err.println("[ERREUR] Échec du placement aléatoire après " + MAX_GLOBAL_ATTEMPTS + " tentatives globales.");
         }
     }
 
@@ -133,20 +148,17 @@ public class Board {
     // ------------------------------------------------------------------------------------------
 
     /**
-     * Traite l'impact d'un tir sur le plateau.
-     * <p>
-     * Enregistre la coordonnée dans l'historique approprié et met à jour
-     * l'état de santé du navire touché, le cas échéant.
-     * </p>
+     * Enregistre un tir sur le plateau et identifie s'il y a impact.
      *
      * @param coord La cible du tir.
      * @return {@code true} si un navire a été touché.
      */
     public boolean receiveFire(Coordinate coord) {
-        // Empêcher de gaspiller un tir sur une case déjà visée
-        if (hitShots.contains(coord) || missedShots.contains(coord)) {
+        if (isAlreadyShot(coord)) {
             return false;
         }
+
+        shotsHistory.add(coord); // On enregistre le tir dans l'historique global
 
         for (Ship ship : ships) {
             if (ship.isAt(coord)) {
@@ -161,26 +173,38 @@ public class Board {
     }
 
     /**
-     * Vérifie si la flotte entière a été neutralisée.
+     * Vérifie si une coordonnée a déjà été ciblée.
+     */
+    public boolean isAlreadyShot(Coordinate coord) {
+        return shotsHistory.contains(coord);
+    }
+
+    /**
+     * Récupère la toute dernière coordonnée visée.
+     */
+    public Coordinate getLastShotCoordinate() {
+        if (shotsHistory.isEmpty()) return null;
+        return shotsHistory.getLast();
+    }
+
+    /**
+     * Détermine si tous les navires présents ont été coulés.
      *
-     * @return {@code true} si tous les navires sont coulés.
+     * @return {@code true} si la défaite est confirmée.
      */
     public boolean allShipsSunk() {
-        return !ships.isEmpty() && ships.stream().allMatch(Ship::isSunk);
+        if (ships.isEmpty()) return false;
+        return ships.stream().allMatch(Ship::isSunk);
     }
 
     // ------------------------------------------------------------------------------------------
-    // ACCESSEURS (GETTERS)
+    // GETTERS
     // ------------------------------------------------------------------------------------------
 
-    /** @return Largeur de la grille. */
     public int getWidth() { return width; }
-    /** @return Hauteur de la grille. */
     public int getHeight() { return height; }
-    /** @return Liste des navires sur le plateau. */
     public List<Ship> getShips() { return ships; }
-    /** @return Liste des tirs ayant réussi. */
     public List<Coordinate> getHitShots() { return hitShots; }
-    /** @return Liste des tirs ayant échoué. */
     public List<Coordinate> getMissedShots() { return missedShots; }
+    private final List<Coordinate> shotsHistory = new ArrayList<>();
 }

@@ -131,19 +131,11 @@ public class GameController {
     }
 
     /**
-     * Analyse l'état des plateaux pour détecter une condition de victoire ou de défaite.
-     * <p>
-     * Si tous les navires d'un camp sont coulés, un {@link GameOverEvent} est émis.
-     * </p>
+     * Initialise l'état du jeu pour lancer la partie.
      */
-    public void checkGameOver() {
-        if (enemyBoard.allShipsSunk()) {
-            log.info("Condition de victoire détectée : Flotte ennemie coulée.");
-            FXGL.getEventBus().fireEvent(new GameOverEvent(true));
-        } else if (playerBoard.allShipsSunk()) {
-            log.info("Condition de défaite détectée : Flotte joueur coulée.");
-            FXGL.getEventBus().fireEvent(new GameOverEvent(false));
-        }
+    public void startGame() {
+        this.currentState = GameState.PLAYER_TURN;
+        System.out.println("Partie lancée : Tour du joueur !");
     }
 
     /**
@@ -151,12 +143,5 @@ public class GameController {
      */
     public GameState getCurrentState() {
         return currentState;
-    }
-
-    /**
-     * @param state Le nouvel état à appliquer au contrôleur.
-     */
-    public void setCurrentState(GameState state) {
-        this.currentState = state;
     }
 }
