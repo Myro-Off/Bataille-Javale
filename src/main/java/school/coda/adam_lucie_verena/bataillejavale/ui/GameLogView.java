@@ -4,6 +4,9 @@ import javafx.geometry.Insets;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 
 /**
  * Zone technique réservée au journal de bord (Logs).
@@ -51,5 +54,11 @@ public class GameLogView extends ScrollPane {
      */
     public void addLog(String message, Color color) {
         // L'implémentation de l'affichage des Text ou Labels se fera ici.
+        Text logEntry = new Text(">"+message);
+        logEntry.setFill(color);
+        logEntry.setFont(Font.font("Monospaced", FontWeight.BOLD, 13));
+        logEntry.setWrappingWidth(this.getPrefWidth()-30);
+        this.container.getChildren().add(logEntry);
+
     }
 }

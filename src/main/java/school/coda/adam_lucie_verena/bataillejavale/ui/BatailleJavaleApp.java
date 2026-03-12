@@ -145,6 +145,12 @@ public class BatailleJavaleApp extends GameApplication {
         List<Ship> alreadySunk = enemyBoard.getShips().stream().filter(Ship::isSunk).collect(Collectors.toList());
         boolean isHit = controller.handlePlayerShot(target);
 
+        if (isHit) {
+            combatView.getGameLog().addLog("Touché en " + target.x() + ":" + target.y(), Color.ORANGE);
+        } else {
+            combatView.getGameLog().addLog("Manqué en " + target.x() + ":" + target.y(), Color.LIGHTBLUE);
+        }
+
         enemyView.updateDisplay();
         VfxManager.playShotEffect(enemyView, target, isHit);
         checkSunkFeedback(enemyBoard, alreadySunk, "ENNEMI");
@@ -162,6 +168,7 @@ public class BatailleJavaleApp extends GameApplication {
      * Ce délai permet au joueur d'observer le résultat de son propre tir.
      */
     private void triggerAIReprisal() {
+        combatView.getGameLog().addLog("L'ennemi analyse les radars...", Color.WHITE);
         PauseTransition pause = new PauseTransition(Duration.millis(800));
         pause.setOnFinished(_ -> {
             List<Ship> alreadySunk = playerBoard.getShips().stream().filter(Ship::isSunk).collect(Collectors.toList());
@@ -169,6 +176,12 @@ public class BatailleJavaleApp extends GameApplication {
 
             Coordinate lastAiTarget = playerBoard.getLastShotCoordinate();
             boolean isHit = playerBoard.getHitShots().contains(lastAiTarget);
+
+            if (isHit) {
+                combatView.getGameLog().addLog("L'IA vous a TOUCHE en " + lastAiTarget.x() + ":" + lastAiTarget.y(), Color.RED);
+            } else {
+                combatView.getGameLog().addLog("L'IA a MANQUE son tir.", Color.GRAY);
+            }
 
             playerView.updateDisplay();
             VfxManager.playShotEffect(playerView, lastAiTarget, isHit);
