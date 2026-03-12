@@ -1,4 +1,4 @@
-package school.coda.adam_lucie_verena.bataillejavale.ui;
+package school.coda.adam_lucie_verena.bataillejavale.view.scene;
 
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.geometry.Insets;
@@ -8,6 +8,11 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.*;
+import school.coda.adam_lucie_verena.bataillejavale.view.component.AchievementTrackerView;
+import school.coda.adam_lucie_verena.bataillejavale.view.component.FleetStatusView;
+import school.coda.adam_lucie_verena.bataillejavale.view.component.SpecialAbilitiesView;
+import school.coda.adam_lucie_verena.bataillejavale.view.component.GameLogView;
+import school.coda.adam_lucie_verena.bataillejavale.view.grid.GameView;
 
 /**
  * Vue principale de l'interface de combat coordonnant l'affichage des grilles tactiques,

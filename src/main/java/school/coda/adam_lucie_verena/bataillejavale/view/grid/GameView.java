@@ -1,4 +1,4 @@
-package school.coda.adam_lucie_verena.bataillejavale.ui;
+package school.coda.adam_lucie_verena.bataillejavale.view.grid;
 
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.*;

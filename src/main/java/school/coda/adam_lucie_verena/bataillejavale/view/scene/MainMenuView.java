@@ -1,4 +1,4 @@
-package school.coda.adam_lucie_verena.bataillejavale.ui;
+package school.coda.adam_lucie_verena.bataillejavale.view.scene;
 
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.geometry.Pos;
@@ -11,6 +11,7 @@ import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import school.coda.adam_lucie_verena.bataillejavale.view.component.MenuButton;
 
 /**
  * Vue du menu principal de l'application.

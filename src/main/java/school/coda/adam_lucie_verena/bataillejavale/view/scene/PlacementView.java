@@ -1,4 +1,4 @@
-package school.coda.adam_lucie_verena.bataillejavale.ui;
+package school.coda.adam_lucie_verena.bataillejavale.view.scene;
 
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.geometry.Insets;
@@ -17,6 +17,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.*;
+import school.coda.adam_lucie_verena.bataillejavale.view.grid.GameView;
 
 import java.util.EnumMap;
 import java.util.Map;

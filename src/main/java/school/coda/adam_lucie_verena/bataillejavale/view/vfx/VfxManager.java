@@ -1,4 +1,4 @@
-package school.coda.adam_lucie_verena.bataillejavale.ui;
+package school.coda.adam_lucie_verena.bataillejavale.view.vfx;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.particle.ParticleEmitter;
@@ -11,6 +11,7 @@ import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Coordinate;
+import school.coda.adam_lucie_verena.bataillejavale.view.grid.GameView;
 
 /**
  * Gestionnaire d'effets visuels (VFX) pour Bataille-Javale.

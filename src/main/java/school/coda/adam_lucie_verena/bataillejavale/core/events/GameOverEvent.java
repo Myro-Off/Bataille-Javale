@@ -4,50 +4,28 @@ import javafx.event.Event;
 import javafx.event.EventType;
 
 /**
- * Événement personnalisé signalant la fin d'une partie de Bataille-Javale.
- * <p>
- * Cet événement est publié sur le {@link com.almasb.fxgl.event.EventBus} par le contrôleur
- * dès qu'une condition de victoire ou de défaite est détectée.
- * </p>
+ * Événement transportant les statistiques finales de la partie.
  */
 public class GameOverEvent extends Event {
-
-    // ------------------------------------------------------------------------------------------
-    // CONSTANTES D'ÉVÉNEMENT
-    // ------------------------------------------------------------------------------------------
-
-    /** Type d'événement de base pour la fin de partie. */
     public static final EventType<GameOverEvent> ANY = new EventType<>(Event.ANY, "GAME_OVER");
 
-    // ------------------------------------------------------------------------------------------
-    // ATTRIBUTS
-    // ------------------------------------------------------------------------------------------
-
-    /** Indique si l'événement correspond à une victoire du joueur humain. */
     private final boolean victory;
-
-    // ------------------------------------------------------------------------------------------
-    // CONSTRUCTEUR
-    // ------------------------------------------------------------------------------------------
+    private final int totalShots;
+    private final int totalHits;
 
     /**
-     * Crée une nouvelle instance de l'événement de fin de partie.
-     *
-     * @param victory {@code true} si le joueur a gagné, {@code false} s'il a perdu.
+     * @param victory    Résultat de la bataille.
+     * @param totalShots Nombre total de tirs effectués par le joueur.
+     * @param totalHits  Nombre de coups au but réussis par le joueur.
      */
-    public GameOverEvent(boolean victory) {
+    public GameOverEvent(boolean victory, int totalShots, int totalHits) {
         super(ANY);
         this.victory = victory;
+        this.totalShots = totalShots;
+        this.totalHits = totalHits;
     }
 
-    // ------------------------------------------------------------------------------------------
-    // GETTERS
-    // ------------------------------------------------------------------------------------------
-
-    /**
-     * @return {@code true} si le joueur est victorieux.
-     */
-    public boolean isVictory() {
-        return victory;
-    }
+    public boolean isVictory() { return victory; }
+    public int getTotalShots() { return totalShots; }
+    public int getTotalHits() { return totalHits; }
 }

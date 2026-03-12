@@ -1,4 +1,4 @@
-package school.coda.adam_lucie_verena.bataillejavale.ui;
+package school.coda.adam_lucie_verena.bataillejavale.view.component;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
