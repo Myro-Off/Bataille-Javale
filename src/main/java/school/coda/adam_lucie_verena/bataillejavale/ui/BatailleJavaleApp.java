@@ -46,8 +46,8 @@ public class BatailleJavaleApp extends GameApplication {
      */
     @Override
     protected void initSettings(GameSettings gameSettings) {
-        gameSettings.setWidth(1500);
-        gameSettings.setHeight(1000);
+        gameSettings.setWidth(1800);
+        gameSettings.setHeight(1080);
         gameSettings.setTitle("Bataille-Javale : Tactical Command");
         gameSettings.setVersion("0.3.0");
         gameSettings.setGameMenuEnabled(false);
@@ -68,7 +68,7 @@ public class BatailleJavaleApp extends GameApplication {
         DatabaseManager.testConnection();
         new PlayerDAO().getOrCreatePlayer(config.player1Name());
         FXGL.getEventBus().addEventHandler(GameOverEvent.ANY, event -> handleGameOver(event.isVictory()));
-    }
+}
 
     /**
      * Initialisation de l'interface utilisateur initiale.
@@ -96,8 +96,20 @@ public class BatailleJavaleApp extends GameApplication {
     /** Affiche l'écran du menu principal. */
     private void setupMainMenu() { switchUI(new MainMenuView(this::startSoloFlow)); }
 
-    /** Affiche l'écran de configuration avant le placement. */
-    private void startSoloFlow() { switchUI(new ConfigView(this::startPlacementFlow)); }
+    /**
+     * Affiche l'écran de configuration tactique.
+     * <p>
+     * Cette méthode transmet la configuration actuelle à la {@link ConfigView} pour
+     * permettre la persistance des choix utilisateur (dimensions, arsenal) lors d'un
+     * retour depuis la phase de placement.
+     * </p>
+     */
+    private void startSoloFlow() {
+        switchUI(new ConfigView(this.config, newConfig -> {
+            this.config = newConfig;
+            startPlacementFlow();
+        }));
+    }
 
     /**
      * Initialise le plateau du joueur et affiche la vue de placement des navires.
@@ -105,16 +117,16 @@ public class BatailleJavaleApp extends GameApplication {
     private void startPlacementFlow() {
         playerBoard = new Board(config.gridWidth(), config.gridHeight());
         playerView = new GameView(playerBoard, true);
-        switchUI(new PlacementView(playerView, playerBoard, this::startGameplay));
+        switchUI(new PlacementView(playerView, playerBoard, config.shipCounts(), this::startSoloFlow, this::startGameplay));
     }
 
     /**
      * Lance la phase de combat.
-     * Initialise le plateau ennemi, le contrôleur de jeu et l'interface de combat (CombatView).
      */
     private void startGameplay() {
         enemyBoard = new Board(config.gridWidth(), config.gridHeight());
-        enemyBoard.placeShipsRandomly();
+        enemyBoard.placeShipsRandomly(config.shipCounts());
+
         controller = new GameController(playerBoard, enemyBoard);
 
         playerView = new GameView(playerBoard, true);
@@ -122,10 +134,8 @@ public class BatailleJavaleApp extends GameApplication {
         enemyView.setOnMouseClicked(e -> handlePlayerShot(e.getX(), e.getY()));
 
         combatView = new CombatView(playerView, enemyView, new GameLogView(), new FleetStatusView(enemyBoard));
-        combatView.prefWidthProperty().bind(FXGL.getGameScene().getRoot().widthProperty());
-        combatView.prefHeightProperty().bind(FXGL.getGameScene().getRoot().heightProperty());
-
         switchUI(combatView);
+
         controller.startGame();
         combatView.updateTurnInfo(true);
     }
@@ -145,18 +155,14 @@ public class BatailleJavaleApp extends GameApplication {
         List<Ship> alreadySunk = enemyBoard.getShips().stream().filter(Ship::isSunk).collect(Collectors.toList());
         boolean isHit = controller.handlePlayerShot(target);
 
-        if (isHit) {
-            combatView.getGameLog().addLog("Touché en " + target.x() + ":" + target.y(), Color.ORANGE);
-        } else {
-            combatView.getGameLog().addLog("Manqué en " + target.x() + ":" + target.y(), Color.LIGHTBLUE);
-        }
-
         enemyView.updateDisplay();
         VfxManager.playShotEffect(enemyView, target, isHit);
         checkSunkFeedback(enemyBoard, alreadySunk, "ENNEMI");
 
         if (enemyBoard.allShipsSunk()) {
-            handleGameOver(true);
+            FXGL.getEventBus().fireEvent(new GameOverEvent(true));
+
+           // handleGameOver(true);
         } else {
             combatView.updateTurnInfo(false);
             triggerAIReprisal();
@@ -168,7 +174,6 @@ public class BatailleJavaleApp extends GameApplication {
      * Ce délai permet au joueur d'observer le résultat de son propre tir.
      */
     private void triggerAIReprisal() {
-        combatView.getGameLog().addLog("L'ennemi analyse les radars...", Color.WHITE);
         PauseTransition pause = new PauseTransition(Duration.millis(800));
         pause.setOnFinished(_ -> {
             List<Ship> alreadySunk = playerBoard.getShips().stream().filter(Ship::isSunk).collect(Collectors.toList());
@@ -188,7 +193,9 @@ public class BatailleJavaleApp extends GameApplication {
             checkSunkFeedback(playerBoard, alreadySunk, "ALLIÉ");
 
             if (playerBoard.allShipsSunk()) {
-                handleGameOver(false);
+                FXGL.getEventBus().fireEvent(new GameOverEvent(false));
+
+               // handleGameOver(false);
             } else {
                 combatView.updateTurnInfo(true);
                 combatView.getFleetStatus().update();

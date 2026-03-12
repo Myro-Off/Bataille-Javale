@@ -1,24 +1,17 @@
 package school.coda.adam_lucie_verena.bataillejavale.ui;
 
+import com.almasb.fxgl.dsl.FXGL;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.*;
 
 /**
- * Centre de commandement tactique et vue principale du combat.
- * <p>
- * Cette classe organise l'interface globale durant la phase de jeu active.
- * Elle utilise un {@link BorderPane} pour structurer les différents modules :
- * <ul>
- * <li><b>TOP :</b> Indicateur de tour et bannière d'état.</li>
- * <li><b>LEFT :</b> Capacités spéciales et suivi des succès (Achievements).</li>
- * <li><b>CENTER :</b> Les deux grilles de combat (Joueur vs Ennemi).</li>
- * <li><b>RIGHT :</b> Statut de la flotte et journal de bord (Logs).</li>
- * </ul>
- * </p>
+ * Vue principale de l'interface de combat coordonnant l'affichage des grilles tactiques,
+ * du journal de bord et de l'état des flottes.
  */
 public class CombatView extends BorderPane {
 
@@ -26,16 +19,14 @@ public class CombatView extends BorderPane {
     private final GameView enemyView;
     private final GameLogView gameLog;
     private final FleetStatusView fleetStatus;
-
-    /** Conteneur vertical pour l'affichage dynamique du tour actuel. */
     private final VBox turnIndicator = new VBox(5);
 
     /**
-     * Initialise la vue de combat avec tous les composants nécessaires.
-     * @param pView   La vue de la grille du joueur.
-     * @param eView   La vue de la grille ennemie.
-     * @param log     L'instance du journal de bord.
-     * @param status  L'instance du statut de la flotte.
+     * Construit la vue de combat et configure les dimensions initiales de l'application.
+     * @param pView Vue de la grille du joueur.
+     * @param eView Vue de la grille ennemie.
+     * @param log Composant de journalisation des événements.
+     * @param status Composant affichant l'état des navires.
      */
     public CombatView(GameView pView, GameView eView, GameLogView log, FleetStatusView status) {
         this.playerView = pView;
@@ -43,51 +34,49 @@ public class CombatView extends BorderPane {
         this.gameLog = log;
         this.fleetStatus = status;
 
+        this.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
+
         setupLayout();
-        // Style : Fond bleu nuit profond pour une immersion tactique
         setStyle("-fx-background-color: #020617;");
     }
 
     /**
-     * Configure l'agencement spatial des composants dans le BorderPane.
-     * <p>
-     * Gère notamment l'encapsulation du journal de bord dans un ScrollPane
-     * pour garantir que la zone de texte ne déforme pas l'interface globale.
-     * </p>
+     * Organise la structure spatiale de l'interface (Haut, Gauche, Centre, Droite)
+     * et applique les mises à l'échelle dynamiques des grilles de jeu.
      */
     private void setupLayout() {
-        // --- TOP : Bannière d'information sur le tour ---
         turnIndicator.setAlignment(Pos.CENTER);
-        turnIndicator.setPadding(new Insets(15));
+        turnIndicator.setPadding(new Insets(10));
         setTop(turnIndicator);
 
-        // --- LEFT : Sidebar des aptitudes et trophées ---
-        VBox leftSidebar = new VBox(30, new SpecialAbilitiesView(), new AchievementTrackerView());
+        VBox leftSidebar = new VBox(20, new SpecialAbilitiesView(), new AchievementTrackerView());
         leftSidebar.setPadding(new Insets(20));
-        leftSidebar.setPrefWidth(250);
+        leftSidebar.setPrefWidth(220);
         setLeft(leftSidebar);
 
-        // --- CENTER : Zone d'engagement (Grilles face à face) ---
-        HBox grids = new HBox(40, playerView, enemyView);
-        grids.setAlignment(Pos.CENTER);
-        setCenter(grids);
+        HBox mainLayout = new HBox(40);
+        mainLayout.setAlignment(Pos.CENTER);
 
-        // --- RIGHT : Surveillance de la flotte et flux de données (Logs) ---
-        VBox rightSidebar = new VBox(20);
+        double availableW = FXGL.getAppWidth() - 620;
+        double availableH = FXGL.getAppHeight() - 150;
+
+        enemyView.autoScale(availableW * 0.7, availableH);
+        playerView.autoScale(availableW * 0.25, availableH * 0.4);
+
+        mainLayout.getChildren().addAll(new Group(enemyView), new Group(playerView));
+        setCenter(mainLayout);
+
+        VBox rightSidebar = new VBox(15);
         rightSidebar.setPadding(new Insets(20));
-        rightSidebar.setPrefWidth(280);
+        rightSidebar.setPrefWidth(300);
 
-        /*
-         * ScrollPane configuré pour contenir le module de logs.
-         * Assure que le log reste dans sa boîte de 400px de haut.
-         */
+        fleetStatus.setPrefHeight(250);
         ScrollPane scroll = new ScrollPane(gameLog);
         scroll.setPrefHeight(400);
         scroll.setFitToWidth(true);
         scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scroll.setStyle("-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: #1e293b;");
 
-        // Mécanisme d'Auto-scroll : Force le défilement vers le bas à chaque ajout de log
         gameLog.heightProperty().addListener((obs, old, newVal) -> scroll.setVvalue(1.0));
 
         rightSidebar.getChildren().addAll(fleetStatus, scroll);
@@ -95,27 +84,24 @@ public class CombatView extends BorderPane {
     }
 
     /**
-     * Met à jour l'affichage de la bannière supérieure selon le tour.
-     * @param isPlayerTurn True si c'est au joueur de cliquer, False pour l'IA.
+     * Met à jour l'affichage de l'indicateur de tour en changeant le texte et la couleur.
+     * @param isPlayerTurn Vrai si c'est au tour du joueur, faux s'il s'agit de l'ennemi.
      */
     public void updateTurnInfo(boolean isPlayerTurn) {
         turnIndicator.getChildren().clear();
-
-        // Texte principal avec code couleur (Cyan pour le joueur, Rouge pour l'ennemi)
         Text t = new Text(isPlayerTurn ? "VOTRE TOUR" : "TOUR ENNEMI");
         t.setFill(isPlayerTurn ? Color.web("#00d2d3") : Color.web("#ff4757"));
         t.setFont(Font.font("Verdana", FontWeight.BOLD, 24));
-
-        // Rappel de l'ordre de passage
-        Text p = new Text("Prochains : " + (isPlayerTurn ? "Ennemi > Vous" : "Vous > Ennemi"));
-        p.setFill(Color.GRAY);
-
-        turnIndicator.getChildren().addAll(t, p);
+        turnIndicator.getChildren().add(t);
     }
 
-    /** @return L'instance gérant l'état de la flotte ennemie. */
+    /**
+     * @return Le composant affichant l'état de santé de la flotte.
+     */
     public FleetStatusView getFleetStatus() { return fleetStatus; }
 
-    /** @return L'instance gérant le journal des événements. */
+    /**
+     * @return Le composant de journalisation des actions.
+     */
     public GameLogView getGameLog() { return gameLog; }
 }

@@ -2,6 +2,7 @@ package school.coda.adam_lucie_verena.bataillejavale.core.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -97,49 +98,62 @@ public class Board {
     }
 
     /**
-     * Tente de placer toute la flotte de manière aléatoire.
-     * <p>
-     * Stratégie : Reset & Retry. Si un navire ne trouve pas de place,
-     * on vide le plateau et on recommence la distribution globale.
-     * </p>
+     * Tente de placer l'intégralité de la flotte configurée de manière aléatoire.
+     * Utilise une stratégie de "Backtracking simplifié" : si un navire ne peut pas être placé,
+     * on réinitialise tout le plateau et on recommence jusqu'à réussite ou épuisement des tentatives.
+     * * @param shipCounts La carte contenant le nombre de navires à placer pour chaque type.
      */
-    public void placeShipsRandomly() {
+    public void placeShipsRandomly(Map<ShipType, Integer> shipCounts) {
         Random random = new Random();
         int globalAttempts = 0;
         boolean success = false;
+
+        // On définit des limites pour éviter une boucle infinie sur une grille trop petite
+        final int MAX_GLOBAL_ATTEMPTS = 200;
+        final int MAX_LOCAL_ATTEMPTS = 100;
 
         while (!success && globalAttempts < MAX_GLOBAL_ATTEMPTS) {
             this.ships.clear();
             success = true;
 
-            for (ShipType type : ShipType.values()) {
-                boolean placed = false;
-                int localAttempts = 0;
+            // On parcourt chaque type de navire défini dans la configuration
+            for (Map.Entry<ShipType, Integer> entry : shipCounts.entrySet()) {
+                ShipType type = entry.getKey();
+                int quantity = entry.getValue();
 
-                while (!placed && localAttempts < MAX_LOCAL_ATTEMPTS) {
-                    int x = random.nextInt(this.width);
-                    int y = random.nextInt(this.height);
-                    Orientation orientation = random.nextBoolean() ?
-                            Orientation.HORIZONTAL : Orientation.VERTICAL;
+                // On tente de placer le nombre exact de navires demandés pour ce type
+                for (int i = 0; i < quantity; i++) {
+                    boolean placed = false;
+                    int localAttempts = 0;
 
-                    Ship testShip = new Ship(type, new Coordinate(x, y), orientation);
+                    while (!placed && localAttempts < MAX_LOCAL_ATTEMPTS) {
+                        int x = random.nextInt(this.width);
+                        int y = random.nextInt(this.height);
+                        Orientation orientation = random.nextBoolean() ?
+                                Orientation.HORIZONTAL : Orientation.VERTICAL;
 
-                    if (placeShip(testShip)) {
-                        placed = true;
+                        Ship testShip = new Ship(type, new Coordinate(x, y), orientation);
+
+                        // placeShip(testShip) vérifie les collisions et les limites
+                        if (placeShip(testShip)) {
+                            placed = true;
+                        }
+                        localAttempts++;
                     }
-                    localAttempts++;
-                }
 
-                if (!placed) {
-                    success = false;
-                    break;
+                    // Si après 100 tentatives locales on n'a pas pu poser CE navire
+                    if (!placed) {
+                        success = false;
+                        break; // On casse la boucle de la flotte pour recommencer à zéro (globalAttempt)
+                    }
                 }
+                if (!success) break;
             }
             globalAttempts++;
         }
 
         if (!success) {
-            System.err.println("[ERREUR] Échec du placement aléatoire après " + MAX_GLOBAL_ATTEMPTS + " tentatives globales.");
+            System.err.println("[ERREUR TACTIQUE] Impossible de déployer la flotte. Grille trop saturée.");
         }
     }
 

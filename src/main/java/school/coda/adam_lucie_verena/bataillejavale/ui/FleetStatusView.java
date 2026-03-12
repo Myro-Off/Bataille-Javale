@@ -1,79 +1,73 @@
 package school.coda.adam_lucie_verena.bataillejavale.ui;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.*;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 /**
- * Composant d'interface affichant l'état de santé en temps réel de la flotte ennemie.
+ * Panneau de suivi de l'état de la flotte ennemie.
  * <p>
- * Cette vue agit comme un tableau de bord tactique. Elle liste tous les navires
- * adverses, indique leur taille, et change leur apparence visuelle (barré/rouge)
- * lorsqu'ils sont confirmés comme coulés.
+ * Affiche des indicateurs visuels (points) pour chaque navire,
+ * avec un retour à la ligne automatique pour la lisibilité.
  * </p>
  */
 public class FleetStatusView extends VBox {
 
-    /** Référence au plateau ennemi pour surveiller l'état des navires. */
     private final Board enemyBoard;
 
-    /**
-     * Initialise le panneau de statut de la flotte.
-     * @param enemyBoard Le plateau de l'adversaire à observer.
-     */
     public FleetStatusView(Board enemyBoard) {
         this.enemyBoard = enemyBoard;
-
-        // Configuration du layout
-        setSpacing(10);
+        setSpacing(15);
         setPadding(new Insets(20));
-
-        // Style semi-transparent pour s'intégrer à l'ambiance "centre de commande"
-        setStyle("-fx-background-color: rgba(30, 41, 59, 0.5); -fx-background-radius: 10;");
-
+        setStyle("-fx-background-color: rgba(15, 23, 42, 0.7); -fx-background-radius: 10; -fx-border-color: #1e293b;");
         update();
     }
 
     /**
-     * Rafraîchit l'affichage de la liste des navires.
-     * <p>
-     * Cette méthode doit être appelée après chaque tir réussi pour mettre à jour
-     * visuellement la progression du joueur. Elle parcourt la liste des navires
-     * du modèle et applique les styles suivants :
-     * </p>
-     * <ul>
-     * <li><b>En vie :</b> Texte gris clair, affichage de la taille.</li>
-     * <li><b>Coulé :</b> Texte rouge corail, nom barré.</li>
-     * </ul>
+     * Rafraîchit les indicateurs de santé.
      */
     public void update() {
-        // Nettoyage des anciens éléments avant reconstruction
         getChildren().clear();
 
-        // Titre de la section avec la couleur accentuée du jeu
-        Text title = new Text("CIBLES RESTANTES");
+        Text title = new Text("SUIVI FLOTTE ENNEMIE");
         title.setFill(Color.web("#00d2d3"));
         title.setFont(Font.font("Verdana", FontWeight.BOLD, 14));
         getChildren().add(title);
 
-        /*
-         * Génération dynamique de la liste des navires basée sur le Board ennemi.
-         */
-        for (Ship ship : enemyBoard.getShips()) {
-            Text name = new Text(ship.getType().getName() + " [" + ship.getType().getSize() + "]");
+        Map<ShipType, List<Ship>> grouped = enemyBoard.getShips().stream()
+                .collect(Collectors.groupingBy(Ship::getType));
 
-            if (ship.isSunk()) {
-                name.setFill(Color.web("#ff4757"));
-                name.setStrikethrough(true);
-            } else {
-                name.setFill(Color.LIGHTGRAY);
+        for (ShipType type : ShipType.values()) {
+            List<Ship> ships = grouped.get(type);
+            if (ships == null || ships.isEmpty()) continue;
+
+            VBox typeBox = new VBox(5);
+            Text name = new Text(type.getName().toUpperCase());
+            name.setFill(Color.LIGHTGRAY);
+            name.setFont(Font.font("Verdana", FontWeight.BOLD, 10));
+
+            FlowPane dotsContainer = new FlowPane(8, 8);
+            dotsContainer.setPrefWrapLength(120);
+            dotsContainer.setAlignment(Pos.CENTER_LEFT);
+
+            for (Ship s : ships) {
+                Circle dot = new Circle(5, s.isSunk() ? Color.web("#ff4757") : Color.web("#10b981"));
+                dotsContainer.getChildren().add(dot);
             }
 
-            getChildren().add(name);
+            typeBox.getChildren().addAll(name, dotsContainer);
+            getChildren().add(typeBox);
         }
     }
 }

@@ -14,7 +14,7 @@ public class PlayerDAO {
      * Récupère l'ID d'un joueur par son nom.
      * S'il n'existe pas, il le crée automatiquement.
      */
-    public int getOrCreatePlayer(String playerName) {
+    public void getOrCreatePlayer(String playerName) {
         String selectSql = "SELECT id FROM players WHERE username = ?";
         String insertSql = "INSERT INTO players (username) VALUES (?) RETURNING id";
 
@@ -25,7 +25,8 @@ public class PlayerDAO {
                 pstmt.setString(1, playerName);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
-                        return rs.getInt("id");
+                        rs.getInt("id");
+                        return;
                     }
                 }
             }
@@ -36,7 +37,7 @@ public class PlayerDAO {
                 pstmt.setString(1, playerName);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
-                        return rs.getInt("id");
+                        rs.getInt("id");
                     }
                 }
             }
@@ -44,6 +45,5 @@ public class PlayerDAO {
         } catch (SQLException e) {
             log.warning("🚩 Erreur SQL lors du GetOrCreatePlayer : " + e.getMessage());
         }
-        return -1;
     }
 }
