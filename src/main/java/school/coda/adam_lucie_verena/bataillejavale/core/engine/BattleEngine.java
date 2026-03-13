@@ -1,76 +1,127 @@
 package school.coda.adam_lucie_verena.bataillejavale.core.engine;
+
 import com.almasb.fxgl.dsl.FXGL;
+import school.coda.adam_lucie_verena.bataillejavale.core.ai.*;
 import school.coda.adam_lucie_verena.bataillejavale.core.events.GameOverEvent;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.*;
-import java.util.Random;
+
 /**
- * Arbitre central gérant les règles métier, les tours et les statistiques de combat.
- * Cette classe est indépendante de toute représentation graphique.
+ * Moteur de jeu gérant la logique métier et le séquençage des manches.
+ * Implémente un système de tour par tour strict où chaque tir met fin au tour actuel.
  */
 public class BattleEngine {
+
     private GameState currentState;
     private final Board playerBoard;
     private final Board enemyBoard;
-    private final Random random = new Random();
-    private int totalPlayerShots = 0;
-    private int totalPlayerHits = 0;
+    private final AIStrategy aiStrategy;
+
+    private int totalPlayerShots = 0, totalPlayerHits = 0;
+    private int totalEnemyShots = 0, totalEnemyHits = 0;
+    private int roundNumber = 1;
+
     /**
-     * Initialise le moteur avec les plateaux respectifs des joueurs.
-     * @param playerBoard Plateau du joueur humain.
-     * @param enemyBoard Plateau de l'adversaire (IA).
+     * @param playerBoard Plateau du joueur.
+     * @param enemyBoard Plateau de l'adversaire.
+     * @param difficulty Niveau de difficulté pour l'IA.
      */
-    public BattleEngine(Board playerBoard, Board enemyBoard) {
+    public BattleEngine(Board playerBoard, Board enemyBoard, Difficulty difficulty) {
         this.playerBoard = playerBoard;
         this.enemyBoard = enemyBoard;
         this.currentState = GameState.PLAYER_TURN;
+
+//        this.aiStrategy = switch (difficulty) {
+//            case EASY -> new RandomAI();
+//            case NORMAL -> new HuntingAI();
+//            case EXPERT -> new TacticalAI();
+//        };
+        this.aiStrategy = difficulty.createAiStrategy();
     }
+
     /**
-     * Traite une intention de tir du joueur et met à jour les statistiques.
-     * @param coord Coordonnée ciblée par le joueur.
-     * @return True si un navire a été touché, false sinon.
+     * Initialise les paramètres d'une nouvelle partie.
+     */
+    public void startGame() {
+        this.currentState = GameState.PLAYER_TURN;
+        this.roundNumber = 1;
+        this.totalPlayerShots = 0; this.totalPlayerHits = 0;
+        this.totalEnemyShots = 0; this.totalEnemyHits = 0;
+    }
+
+    /**
+     * Traite le tir du joueur et bascule systématiquement le tour vers l'IA.
+     * @param coord Cible du tir.
+     * @return true si un navire est touché.
      */
     public boolean handlePlayerShot(Coordinate coord) {
         if (currentState != GameState.PLAYER_TURN) return false;
+
         totalPlayerShots++;
         boolean hit = enemyBoard.receiveFire(coord);
+
         if (hit) totalPlayerHits++;
+
         if (enemyBoard.allShipsSunk()) {
             currentState = GameState.GAME_OVER;
             FXGL.getEventBus().fireEvent(new GameOverEvent(true, totalPlayerShots, totalPlayerHits));
         } else {
             currentState = GameState.AI_TURN;
         }
+
         return hit;
     }
+
     /**
-     * Calcule et exécute la riposte de l'Intelligence Artificielle.
-     * @return La coordonnée sélectionnée par l'IA pour son tir.
+     * Exécute le tir de l'IA et bascule systématiquement le tour vers le joueur.
+     * @return La coordonnée attaquée.
      */
     public Coordinate aiTurn() {
         if (currentState != GameState.AI_TURN) return null;
-        Coordinate target;
-        do {
-            target = new Coordinate(random.nextInt(playerBoard.getWidth()), random.nextInt(playerBoard.getHeight()));
-        } while (playerBoard.isAlreadyShot(target));
-        playerBoard.receiveFire(target);
+
+        Coordinate target = aiStrategy.chooseTarget(playerBoard);
+        totalEnemyShots++;
+
+        boolean hit = playerBoard.receiveFire(target);
+        boolean sunk = false;
+
+        if (hit) {
+            totalEnemyHits++;
+            sunk = playerBoard.getShips().stream()
+                    .filter(s -> s.isAt(target))
+                    .findFirst()
+                    .map(Ship::isSunk)
+                    .orElse(false);
+        }
+
+        aiStrategy.informResult(target, hit, sunk);
+
         if (playerBoard.allShipsSunk()) {
             currentState = GameState.GAME_OVER;
             FXGL.getEventBus().fireEvent(new GameOverEvent(false, totalPlayerShots, totalPlayerHits));
         } else {
             currentState = GameState.PLAYER_TURN;
         }
+
         return target;
     }
+
     /**
-     * Positionne l'état initial pour le début du combat.
+     * Incrémente le compteur de manches.
      */
-    public void startGame() {
-        currentState = GameState.PLAYER_TURN;
+    public void nextRound() {
+        this.roundNumber++;
     }
-    /**
-     * @return L'état actuel de la partie (tour du joueur, IA ou fin de partie).
-     */
-    public GameState getCurrentState() {
-        return currentState;
+
+    public int getRoundNumber() { return roundNumber; }
+    public int getTotalPlayerShots() { return totalPlayerShots; }
+    public int getTotalPlayerHits() { return totalPlayerHits; }
+    public int getTotalEnemyShots() { return totalEnemyShots; }
+    public int getTotalEnemyHits() { return totalEnemyHits; }
+    public GameState getCurrentState() { return currentState; }
+    public double getPlayerAccuracy() { return calculateAcc(totalPlayerShots, totalPlayerHits); }
+    public double getEnemyAccuracy() { return calculateAcc(totalEnemyShots, totalEnemyHits); }
+
+    private double calculateAcc(int s, int h) {
+        return s == 0 ? 0.0 : (double) h / s * 100.0;
     }
 }

@@ -1,8 +1,7 @@
-package school.coda.adam_lucie_verena.bataillejavale.view.scene;
+package school.coda.adam_lucie_verena.bataillejavale.gui.scene;
 
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.geometry.Pos;
-import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -12,38 +11,34 @@ import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import school.coda.adam_lucie_verena.bataillejavale.view.audio.SoundManager;
-import school.coda.adam_lucie_verena.bataillejavale.view.component.MenuButton;
+import school.coda.adam_lucie_verena.bataillejavale.gui.audio.SoundManager;
+import school.coda.adam_lucie_verena.bataillejavale.gui.component.MenuButton;
 
 /**
- * Vue du menu principal de l'application.
+ * Vue principale représentant le menu d'accueil du jeu.
+ * Gère l'affichage du titre, des boutons de navigation et l'ambiance sonore initiale.
  */
 public class MainMenuView extends StackPane {
 
-    // ------------------------------------------------------------------------------------------
-    // CONSTRUCTEUR
-    // ------------------------------------------------------------------------------------------
-
+    /**
+     * Initialise le menu principal avec son fond, son contenu et lance la musique d'ambiance.
+     * @param onPlay Action à exécuter lors du clic sur le bouton de jeu solo.
+     */
     public MainMenuView(Runnable onPlay) {
         SoundManager.playMusic("musique_de_fond.wav");
         this.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
 
-        // 1. GÉNÉRATION DU FOND OPAQUE
         Rectangle background = createBackground();
-
-        // 2. CRÉATION DU CONTENU (Titre + Boutons)
         VBox menuContent = createMenuContent(onPlay);
         //VBox muteBox = createBoxMuet();
 
-        // 3. EMPILEMENT DES COUCHES
-        // L'ordre est crucial : muteBox est au-dessus mais "transparente" aux clics
         getChildren().addAll(background, menuContent/*, muteBox*/);
     }
 
-    // ------------------------------------------------------------------------------------------
-    // MÉTHODES PRIVÉES : CONSTRUCTION DES COMPOSANTS
-    // ------------------------------------------------------------------------------------------
-
+    /**
+     * Crée le rectangle de fond avec un dégradé linéaire sombre pour l'esthétique "Deep Sea".
+     * @return Un Rectangle aux dimensions de l'application avec un dégradé de bleu nuit.
+     */
     private Rectangle createBackground() {
         LinearGradient gradient = new LinearGradient(
                 0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
@@ -56,12 +51,15 @@ public class MainMenuView extends StackPane {
         return bg;
     }
 
+    /**
+     * Méthode de création de l'interface de contrôle du volume (actuellement désactivée).
+     * @return Une VBox contenant les options de gestion du son.
+     */
 //    private VBox createBoxMuet() {
 //        VBox right = new VBox(5);
 //        right.setAlignment(Pos.TOP_RIGHT);
 //        StackPane.setAlignment(right, Pos.TOP_RIGHT);
 //
-//        // Empêche la VBox de bloquer les boutons du dessous
 //        right.setPickOnBounds(false);
 //        right.setPadding(new javafx.geometry.Insets(15));
 //
@@ -75,6 +73,11 @@ public class MainMenuView extends StackPane {
 //        return right;
 //    }
 
+    /**
+     * Génère le titre stylisé et la liste des boutons de navigation du menu.
+     * @param onPlay Action liée au bouton "Jouer Solo".
+     * @return Une VBox centrée contenant les éléments interactifs du menu.
+     */
     private VBox createMenuContent(Runnable onPlay) {
         VBox content = new VBox(15);
         content.setAlignment(Pos.CENTER);
@@ -94,8 +97,4 @@ public class MainMenuView extends StackPane {
         content.getChildren().addAll(title, btnPlay, btnMulti, btnStats, btnSettings, btnQuit);
         return content;
     }
-
-    /* =========================================================================================
-     * 📖 TODO : LE REGISTRE DE L'AMIRAUTÉ (UI MENU)
-     * ========================================================================================= */
 }

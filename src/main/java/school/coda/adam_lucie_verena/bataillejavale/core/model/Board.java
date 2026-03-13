@@ -19,9 +19,6 @@ public class Board {
     // CONSTANTES & ATTRIBUTS
     // ------------------------------------------------------------------------------------------
 
-    private static final int MAX_GLOBAL_ATTEMPTS = 100;
-    private static final int MAX_LOCAL_ATTEMPTS = 200;
-
     private final int width;
     private final int height;
 

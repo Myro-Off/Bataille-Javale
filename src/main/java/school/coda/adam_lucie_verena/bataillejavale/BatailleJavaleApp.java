@@ -14,10 +14,11 @@ import school.coda.adam_lucie_verena.bataillejavale.core.engine.BattleEngine;
 import school.coda.adam_lucie_verena.bataillejavale.core.data.PlayerDAO;
 import school.coda.adam_lucie_verena.bataillejavale.core.events.GameOverEvent;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.*;
-import school.coda.adam_lucie_verena.bataillejavale.view.component.FleetStatusView;
-import school.coda.adam_lucie_verena.bataillejavale.view.component.GameLogView;
-import school.coda.adam_lucie_verena.bataillejavale.view.grid.GameView;
-import school.coda.adam_lucie_verena.bataillejavale.view.scene.*;
+import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
+import school.coda.adam_lucie_verena.bataillejavale.gui.component.FleetStatusView;
+import school.coda.adam_lucie_verena.bataillejavale.gui.component.GameLogView;
+import school.coda.adam_lucie_verena.bataillejavale.gui.grid.GameView;
+import school.coda.adam_lucie_verena.bataillejavale.gui.scene.*;
 /**
  * Orchestrateur principal de l'application Bataille-Javale.
  * Gère le cycle de vie global et les transitions entre les différentes phases du jeu.
@@ -89,7 +90,7 @@ public class BatailleJavaleApp extends GameApplication {
         switchUI(new ConfigView(this.config, newConfig -> {
             this.config = newConfig;
             startPlacementFlow();
-        }));
+        }, this::setupMainMenu));
     }
     /**
      * Initialise le plateau du joueur et lance la phase de placement tactique.
@@ -105,10 +106,13 @@ public class BatailleJavaleApp extends GameApplication {
     private void startGameplay() {
         enemyBoard = new Board(config.gridWidth(), config.gridHeight());
         enemyBoard.placeShipsRandomly(config.shipCounts());
-        engine = new BattleEngine(playerBoard, enemyBoard);
+        engine = new BattleEngine(playerBoard, enemyBoard, config.difficulty());
         playerView = new GameView(playerBoard, true);
         enemyView = new GameView(enemyBoard, false);
-        combatView = new CombatView(playerView, enemyView, new GameLogView(), new FleetStatusView(enemyBoard));
+        GameLogView log = new GameLogView();
+        FleetStatusView playerFleet = new FleetStatusView(playerBoard, "MA FLOTTE", Theme.CYAN);
+        FleetStatusView enemyFleet = new FleetStatusView(enemyBoard, "SUIVI FLOTTE ENNEMIE", Theme.RED_ALERTE);
+        combatView = new CombatView(playerView, enemyView, log, playerFleet, enemyFleet);
         battleManager = new CombatOrchestrator(engine, playerBoard, enemyBoard, playerView, enemyView, combatView);
         enemyView.setOnMouseClicked(e -> {
             Coordinate target = enemyView.getGridCoordinate(e.getX(), e.getY());

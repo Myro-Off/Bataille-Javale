@@ -18,7 +18,7 @@ public record GameConfig(
 ) {
     /** Création d'une configuration par défaut pour le premier lancement. */
     public static GameConfig createDefault() {
-        return new GameConfig(10, 10, Difficulty.NORMALE, true, false, "Joueur 1", "IA",
+        return new GameConfig(10, 10, Difficulty.NORMAL, true, false, "Joueur 1", "IA",
                 Map.of(ShipType.CARRIER, 1, ShipType.BATTLESHIP, 1, ShipType.DESTROYER, 1, ShipType.SUBMARINE, 1, ShipType.PATROL, 1));
     }
 }
