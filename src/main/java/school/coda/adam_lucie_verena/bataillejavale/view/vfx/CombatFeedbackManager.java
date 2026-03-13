@@ -3,6 +3,7 @@ package school.coda.adam_lucie_verena.bataillejavale.view.vfx;
 import javafx.scene.paint.Color;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Coordinate;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Ship;
+import school.coda.adam_lucie_verena.bataillejavale.view.audio.SoundManager;
 import school.coda.adam_lucie_verena.bataillejavale.view.component.GameLogView;
 
 /**
@@ -27,6 +28,7 @@ public class CombatFeedbackManager {
      */
     public void logHit(String shooter, Coordinate coord) {
         logView.addLog(shooter + " : IMPACT CONFIRMÉ en " + (char)('A' + coord.x()) + (coord.y() + 1), Color.web("#ff4757"));
+        SoundManager.playSFX("canon.wav");
     }
 
     /**
@@ -35,6 +37,7 @@ public class CombatFeedbackManager {
      */
     public void logMiss(String shooter) {
         logView.addLog(shooter + " : Projectile perdu en mer.", Color.web("#94a3b8"));
+        SoundManager.playSFX("a_l_eau.wav");
     }
 
     /**

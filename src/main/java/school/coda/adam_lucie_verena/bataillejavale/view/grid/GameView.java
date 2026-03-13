@@ -212,6 +212,7 @@ public class GameView extends Pane {
         }
 
         for (Coordinate miss : board.getMissedShots()) {
+
             addMissMarker(miss.x(), miss.y(), animatedCoords.add(miss));
         }
 

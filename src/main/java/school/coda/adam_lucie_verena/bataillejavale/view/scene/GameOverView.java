@@ -13,9 +13,11 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
+import school.coda.adam_lucie_verena.bataillejavale.view.audio.SoundManager;
 import school.coda.adam_lucie_verena.bataillejavale.view.component.MenuButton;
 
 public class GameOverView extends StackPane {
+
 
     private final Color themeColor;
 
@@ -65,6 +67,13 @@ public class GameOverView extends StackPane {
         box.setAlignment(Pos.CENTER);
 
         Text label = new Text(isVictory ? "RAPPORT DE VICTOIRE" : "RAPPORT D'ÉCHEC");
+        //sons de la victoire et de la défaite
+        if (isVictory){
+            SoundManager.playSFX("win.wav");
+        }
+        else {
+            SoundManager.playSFX("echec.wav");
+        };
         label.setFill(Color.web("#94a3b8"));
         label.setFont(Font.font("Verdana", 20));
 

@@ -2,6 +2,7 @@ package school.coda.adam_lucie_verena.bataillejavale.view.scene;
 
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.geometry.Pos;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -11,15 +12,11 @@ import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import school.coda.adam_lucie_verena.bataillejavale.view.audio.SoundManager;
 import school.coda.adam_lucie_verena.bataillejavale.view.component.MenuButton;
 
 /**
  * Vue du menu principal de l'application.
- * <p>
- * Cette classe utilise un {@link StackPane} pour superposer un fond opaque (dégradé linéaire)
- * et un conteneur vertical {@link VBox} regroupant les boutons de navigation.
- * L'opacité totale garantit que les éléments de jeu en arrière-plan ne sont pas visibles.
- * </p>
  */
 public class MainMenuView extends StackPane {
 
@@ -27,12 +24,8 @@ public class MainMenuView extends StackPane {
     // CONSTRUCTEUR
     // ------------------------------------------------------------------------------------------
 
-    /**
-     * Initialise le menu principal avec un fond stylisé et les boutons de commande.
-     * @param onPlay Action à exécuter lors du clic sur le bouton "JOUER SOLO".
-     */
     public MainMenuView(Runnable onPlay) {
-        // Configuration de la taille pour recouvrir la fenêtre DisplayGame
+        SoundManager.playMusic("musique_de_fond.wav");
         this.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
 
         // 1. GÉNÉRATION DU FOND OPAQUE
@@ -40,24 +33,22 @@ public class MainMenuView extends StackPane {
 
         // 2. CRÉATION DU CONTENU (Titre + Boutons)
         VBox menuContent = createMenuContent(onPlay);
+        //VBox muteBox = createBoxMuet();
 
         // 3. EMPILEMENT DES COUCHES
-        getChildren().addAll(background, menuContent);
+        // L'ordre est crucial : muteBox est au-dessus mais "transparente" aux clics
+        getChildren().addAll(background, menuContent/*, muteBox*/);
     }
 
     // ------------------------------------------------------------------------------------------
     // MÉTHODES PRIVÉES : CONSTRUCTION DES COMPOSANTS
     // ------------------------------------------------------------------------------------------
 
-    /**
-     * Crée le rectangle de fond avec un dégradé de couleurs "Deep Space".
-     * @return Un {@link Rectangle} opaque de 1000x600.
-     */
     private Rectangle createBackground() {
         LinearGradient gradient = new LinearGradient(
                 0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
-                new Stop(0, Color.web("#050514")), // Bleu nuit profond
-                new Stop(1, Color.web("#0a0a28"))  // Bleu marine sombre
+                new Stop(0, Color.web("#050514")),
+                new Stop(1, Color.web("#0a0a28"))
         );
 
         Rectangle bg = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight(), gradient);
@@ -65,23 +56,35 @@ public class MainMenuView extends StackPane {
         return bg;
     }
 
-    /**
-     * Assemble le titre du jeu et la liste des boutons d'action.
-     * @param onPlay Action de démarrage de partie.
-     * @return Un conteneur {@link VBox} centré.
-     */
+//    private VBox createBoxMuet() {
+//        VBox right = new VBox(5);
+//        right.setAlignment(Pos.TOP_RIGHT);
+//        StackPane.setAlignment(right, Pos.TOP_RIGHT);
+//
+//        // Empêche la VBox de bloquer les boutons du dessous
+//        right.setPickOnBounds(false);
+//        right.setPadding(new javafx.geometry.Insets(15));
+//
+//        javafx.scene.control.MenuButton btnMuet = new javafx.scene.control.MenuButton("SON");
+//
+//        MenuItem item1 = new MenuItem("Couper le son");
+//        item1.setOnAction(e -> SoundManager.stopMusic());
+//
+//        btnMuet.getItems().add(item1);
+//        right.getChildren().add(btnMuet);
+//        return right;
+//    }
+
     private VBox createMenuContent(Runnable onPlay) {
         VBox content = new VBox(15);
         content.setAlignment(Pos.CENTER);
 
-        // Configuration du titre principal
         Text title = new Text("BATAILLE JAVALE");
         title.setFont(Font.font("Verdana", 60));
         title.setFill(Color.CYAN);
         title.setStroke(Color.WHITE);
         title.setStrokeWidth(0.5);
 
-        // Instanciation des boutons
         MenuButton btnPlay     = new MenuButton("JOUER SOLO", onPlay);
         MenuButton btnMulti    = new MenuButton("MULTIJOUEUR", () -> System.out.println("Online coming soon..."));
         MenuButton btnStats    = new MenuButton("CLASSEMENT / STATS", () -> System.out.println("Ouverture du Leaderboard..."));
@@ -91,19 +94,8 @@ public class MainMenuView extends StackPane {
         content.getChildren().addAll(title, btnPlay, btnMulti, btnStats, btnSettings, btnQuit);
         return content;
     }
+
     /* =========================================================================================
      * 📖 TODO : LE REGISTRE DE L'AMIRAUTÉ (UI MENU)
-     * =========================================================================================
-     * OBJECTIF : Afficher la liste des succès (verrouillés/déverrouillés) depuis le menu.
-     *
-     * ÉTAPES :
-     * 1. Créer une interface 'AchievementView' (VBox ou GridPane).
-     * 2. Parcourir ton Enum 'AchievementType' et afficher chaque ligne.
-     * 3. Style visuel :
-     * - Si débloqué : Texte en CYAN brillant + icône.
-     * - Si verrouillé : Texte en GRIS sombre + cadenas.
-     *
-     * RÉSULTAT ATTENDU :
-     * Une fenêtre élégante qui donne envie au joueur de compléter tous les défis.
      * ========================================================================================= */
 }
