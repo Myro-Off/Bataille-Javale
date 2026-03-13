@@ -1,6 +1,7 @@
 package school.coda.adam_lucie_verena.bataillejavale.core.engine;
 
 import com.almasb.fxgl.dsl.FXGL;
+import school.coda.adam_lucie_verena.bataillejavale.core.achievement.AchievementManager;
 import school.coda.adam_lucie_verena.bataillejavale.core.ai.*;
 import school.coda.adam_lucie_verena.bataillejavale.core.events.GameOverEvent;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.*;
@@ -15,6 +16,7 @@ public class BattleEngine {
     private final Board playerBoard;
     private final Board enemyBoard;
     private final AIStrategy aiStrategy;
+    private final AchievementManager achievementManager;
 
     private int totalPlayerShots = 0, totalPlayerHits = 0;
     private int totalEnemyShots = 0, totalEnemyHits = 0;
@@ -25,9 +27,10 @@ public class BattleEngine {
      * @param enemyBoard Plateau de l'adversaire.
      * @param difficulty Niveau de difficulté pour l'IA.
      */
-    public BattleEngine(Board playerBoard, Board enemyBoard, Difficulty difficulty) {
+    public BattleEngine(Board playerBoard, Board enemyBoard, Difficulty difficulty, AchievementManager achievementManager) {
         this.playerBoard = playerBoard;
         this.enemyBoard = enemyBoard;
+        this.achievementManager = achievementManager;
         this.currentState = GameState.PLAYER_TURN;
 
 //        this.aiStrategy = switch (difficulty) {
@@ -62,6 +65,7 @@ public class BattleEngine {
         if (hit) totalPlayerHits++;
 
         if (enemyBoard.allShipsSunk()) {
+            achievementManager.onGameEnd(true, roundNumber);
             currentState = GameState.GAME_OVER;
             FXGL.getEventBus().fireEvent(new GameOverEvent(true, totalPlayerShots, totalPlayerHits));
         } else {
@@ -96,6 +100,7 @@ public class BattleEngine {
         aiStrategy.informResult(target, hit, sunk);
 
         if (playerBoard.allShipsSunk()) {
+            achievementManager.onGameEnd(false, roundNumber);
             currentState = GameState.GAME_OVER;
             FXGL.getEventBus().fireEvent(new GameOverEvent(false, totalPlayerShots, totalPlayerHits));
         } else {

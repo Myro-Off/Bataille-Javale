@@ -12,6 +12,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
+import school.coda.adam_lucie_verena.bataillejavale.core.achievement.AchievementType;
 import school.coda.adam_lucie_verena.bataillejavale.gui.audio.SoundManager;
 import school.coda.adam_lucie_verena.bataillejavale.gui.component.MenuButton;
 import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
@@ -23,6 +24,7 @@ public class GameOverView extends StackPane {
 
 
     private final Color themeColor;
+    private static int totalSeries = 0;
 
     /**
      * Initialise la vue de fin de partie avec les résultats du combat.
@@ -57,6 +59,9 @@ public class GameOverView extends StackPane {
         animateEntrance(root);
     }
 
+    public void showAchievementType(AchievementType type){
+
+    }
     /**
      * Construit l'en-tête contenant le titre de mission et le grade.
      */
@@ -71,6 +76,7 @@ public class GameOverView extends StackPane {
         else {
             SoundManager.playSFX("echec.wav");
         }
+
         label.setFill(Color.web("#94a3b8"));
         label.setFont(Font.font("Verdana", 20));
         label.setFill(Theme.TEXT_MUTED);
@@ -121,7 +127,9 @@ public class GameOverView extends StackPane {
                 createDivider(),
                 createLargeStat("IMPACTS", String.valueOf(hits)),
                 createDivider(),
-                createLargeStat("PRÉCISION", String.format("%.1f%%", acc))
+                createLargeStat("PRÉCISION", String.format("%.1f%%", acc)),
+                createDivider(),
+                createLargeStat("SERIE", String.valueOf(totalSeries))
         );
 
         return box;

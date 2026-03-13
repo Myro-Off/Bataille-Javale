@@ -8,6 +8,7 @@ import javafx.application.Platform;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import org.jetbrains.annotations.NotNull;
+import school.coda.adam_lucie_verena.bataillejavale.core.achievement.AchievementManager;
 import school.coda.adam_lucie_verena.bataillejavale.core.data.DatabaseManager;
 import school.coda.adam_lucie_verena.bataillejavale.controller.CombatOrchestrator;
 import school.coda.adam_lucie_verena.bataillejavale.core.engine.BattleEngine;
@@ -17,6 +18,7 @@ import school.coda.adam_lucie_verena.bataillejavale.core.model.*;
 import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
 import school.coda.adam_lucie_verena.bataillejavale.gui.component.FleetStatusView;
 import school.coda.adam_lucie_verena.bataillejavale.gui.component.GameLogView;
+import school.coda.adam_lucie_verena.bataillejavale.gui.component.NotificationView;
 import school.coda.adam_lucie_verena.bataillejavale.gui.grid.GameView;
 import school.coda.adam_lucie_verena.bataillejavale.gui.scene.*;
 /**
@@ -33,6 +35,8 @@ public class BatailleJavaleApp extends GameApplication {
     private GameView enemyView;
     private CombatView combatView;
     private Node currentUI;
+    private AchievementManager achievementManager = new AchievementManager();
+    private NotificationView notificationView;
     /**
      * Configure les paramètres techniques du moteur FXGL.
      */
@@ -65,6 +69,9 @@ public class BatailleJavaleApp extends GameApplication {
     protected void initUI() {
         FXGL.getGameScene().setCursor(Cursor.DEFAULT);
         setupMainMenu();
+        notificationView = new NotificationView();
+        FXGL.addUINode(notificationView);
+        achievementManager.setNotificationView(notificationView);
     }
     /**
      * Remplace le composant graphique actuellement affiché par un nouveau.
@@ -106,7 +113,7 @@ public class BatailleJavaleApp extends GameApplication {
     private void startGameplay() {
         enemyBoard = new Board(config.gridWidth(), config.gridHeight());
         enemyBoard.placeShipsRandomly(config.shipCounts());
-        engine = new BattleEngine(playerBoard, enemyBoard, config.difficulty());
+        engine = new BattleEngine(playerBoard, enemyBoard, config.difficulty(), achievementManager);
         playerView = new GameView(playerBoard, true);
         enemyView = new GameView(enemyBoard, false);
         GameLogView log = new GameLogView();
