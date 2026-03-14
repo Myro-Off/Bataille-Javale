@@ -121,15 +121,18 @@ public class BatailleJavaleApp extends GameApplication {
 
     @Override
     protected void initInput() {
-        FXGL.getInput().addEventHandler(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
+        FXGL.getInput().addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
             inputHistory.add(e.getCode());
+
             if (inputHistory.size() > konamiSequence.size()) {
                 inputHistory.removeFirst();
             }
+
             if (inputHistory.equals(konamiSequence)) {
                 achievementManager.unlockKonamiCode();
                 AssetsManager.playSFX("secret.wav", 1.0);
                 inputHistory.clear();
+                System.out.println("LOG : Code Konami activé !");
             }
         });
     }

@@ -165,6 +165,7 @@ public class BattleEngine {
     private void switchTurn() {
         shotsFiredThisTurn = 0;
         if (currentState == GameState.PLAYER_TURN) {
+            boostedVolleyActive = false;
             currentState = GameState.AI_TURN;
         } else {
             currentState = GameState.PLAYER_TURN;
@@ -178,11 +179,19 @@ public class BattleEngine {
      * @return Nombre de tirs possibles.
      */
     public int getShotsAllowed() {
-        if (!salveMode) return 1;
-        if (currentState == GameState.PLAYER_TURN && boostedVolleyActive) return 5;
+        if (currentState == GameState.PLAYER_TURN && boostedVolleyActive) {
+            return 5;
+        }
 
-        Board activeBoard = (currentState == GameState.PLAYER_TURN) ? playerBoard : enemyBoard;
-        return (int) activeBoard.getShips().stream().filter(s -> !s.isSunk()).count();
+        if (!salveMode) return 1;
+
+        Board attackerBoard = (currentState == GameState.PLAYER_TURN) ? playerBoard : enemyBoard;
+
+        int aliveShips = (int) attackerBoard.getShips().stream()
+                .filter(s -> !s.isSunk())
+                .count();
+
+        return Math.max(1, aliveShips);
     }
 
     /**
