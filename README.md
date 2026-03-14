@@ -18,7 +18,7 @@ Développé par Adam et Lucie
 Système de tir dynamique basé sur l'état de la flotte (1 navire = 1 tir).
 le menu principal.
 - Redimensionnement de la grille de placement (5x5 à 26x26)
-- Personnalisation des préférences :
+- Personnalisation des parties (garde les mêmes paramètres en cliquant sur rejouer) :
   - Taille de la grille
   - Sons SFX / Musique disponible partout
   - Difficulté de l'IA
