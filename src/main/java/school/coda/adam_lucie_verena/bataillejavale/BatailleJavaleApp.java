@@ -145,6 +145,7 @@ public class BatailleJavaleApp extends GameApplication {
         }, this::setupMainMenu));
     }
 
+
     /**
      * Prépare le plateau de jeu et lance la phase de positionnement des navires.
      */
