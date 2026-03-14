@@ -151,7 +151,7 @@ public class CustomLoadingScene extends LoadingScene {
      * Crée la mention des auteurs.
      */
     private Text createCredits() {
-        Text credits = new Text("Développé par Adam, Lucie et Verena");
+        Text credits = new Text("Développé par Adam et Lucie");
         credits.setFont(Font.font(FONT_FAMILY, 16));
         credits.setFill(Color.GRAY);
         return credits;

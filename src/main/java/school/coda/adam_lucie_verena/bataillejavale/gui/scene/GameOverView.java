@@ -12,8 +12,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
-import school.coda.adam_lucie_verena.bataillejavale.core.achievement.AchievementType;
-import school.coda.adam_lucie_verena.bataillejavale.gui.audio.SoundManager;
+import school.coda.adam_lucie_verena.bataillejavale.gui.AssetsManager;
 import school.coda.adam_lucie_verena.bataillejavale.gui.component.MenuButton;
 import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
 
@@ -35,6 +34,12 @@ public class GameOverView extends StackPane {
      * @param onMenu Action pour retourner au menu principal.
      */
     public GameOverView(boolean isVictory, int shots, int hits, Runnable onRestart, Runnable onMenu) {
+        if (isVictory) {
+            totalSeries++;
+        } else {
+            totalSeries = 0;
+        }
+
         this.themeColor = isVictory ? Theme.CYAN : Theme.RED_ALERTE;
         setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
 
@@ -48,10 +53,11 @@ public class GameOverView extends StackPane {
         HBox statsArea = buildStatsArea(shots, hits);
 
         HBox actions = new HBox(30,
-                new MenuButton("REJOUER L'ASSAUT", onRestart),
+                new MenuButton("REJOUER", onRestart),
                 new MenuButton("MENU PRINCIPAL", onMenu)
         );
         actions.setAlignment(Pos.CENTER);
+        actions.setOnMouseClicked(_ -> AssetsManager.playMusic("mainmenu.mp3", 0.2));
 
         root.getChildren().addAll(header, statsArea, actions);
         getChildren().addAll(bg, root);
@@ -59,9 +65,6 @@ public class GameOverView extends StackPane {
         animateEntrance(root);
     }
 
-    public void showAchievementType(AchievementType type){
-
-    }
     /**
      * Construit l'en-tête contenant le titre de mission et le grade.
      */
@@ -71,10 +74,12 @@ public class GameOverView extends StackPane {
 
         Text label = new Text(isVictory ? "RAPPORT DE VICTOIRE" : "RAPPORT D'ÉCHEC");
         if (isVictory){
-            SoundManager.playSFX("win.wav");
+            AssetsManager.stopMusic();
+            AssetsManager.playSFX("win.wav", 0.6);
+            AssetsManager.playMusic("victory.mp3", 0.6);
         }
         else {
-            SoundManager.playSFX("echec.wav");
+            AssetsManager.playMusic("lose.mp3", 0.6);
         }
 
         label.setFill(Color.web("#94a3b8"));

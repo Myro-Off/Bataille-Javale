@@ -128,7 +128,6 @@ public class GameView extends Pane {
         this.setOnMouseMoved(e -> {
             Coordinate c = getGridCoordinate(e.getX(), e.getY());
             if (c != null) {
-                if (!isPlayerView) setCursor(Theme.CURSOR_TARGET);
                 highlightRow.setVisible(true); highlightCol.setVisible(true); hoverCoord.setVisible(true);
                 highlightRow.setY(c.y() * CELL_SIZE + OFFSET);
                 highlightRow.setX(OFFSET);
@@ -141,7 +140,6 @@ public class GameView extends Pane {
 
                 hoverCoord.setText((char) ('A' + c.x()) + " : " + (c.y() + 1));
 
-                // Bridage intelligent pour le bug du bord droit
                 double tX = e.getX() + 15;
                 double tY = e.getY() - 15;
                 if (tX + 75 > getWidth()) tX = e.getX() - 80;
@@ -159,8 +157,13 @@ public class GameView extends Pane {
      * Masque les aides visuelles de sélection.
      */
     private void hideHighlights() {
-        highlightRow.setVisible(false); highlightCol.setVisible(false); hoverCoord.setVisible(false);
-        setCursor(javafx.scene.Cursor.DEFAULT);
+        highlightRow.setVisible(false);
+        highlightCol.setVisible(false);
+        hoverCoord.setVisible(false);
+
+        if (getCursor() != javafx.scene.Cursor.DEFAULT) {
+            setCursor(javafx.scene.Cursor.DEFAULT);
+        }
     }
 
     /**

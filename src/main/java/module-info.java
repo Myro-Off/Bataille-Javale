@@ -8,5 +8,7 @@ module school.coda.adam_lucie_verena.bataillejavale {
     exports school.coda.adam_lucie_verena.bataillejavale;
 
     opens school.coda.adam_lucie_verena.bataillejavale to com.almasb.fxgl.all;
-
+    opens assets.sounds;
+    opens assets.music;
+    opens assets.textures;
 }

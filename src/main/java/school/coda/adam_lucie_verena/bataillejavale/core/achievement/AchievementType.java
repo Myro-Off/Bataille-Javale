@@ -1,25 +1,55 @@
 package school.coda.adam_lucie_verena.bataillejavale.core.achievement;
 
+/**
+ * Liste exhaustive des succès déverrouillables et leurs objectifs numériques.
+ * <p>
+ * Chaque type définit un nom, une description et une valeur cible (targetValue)
+ * utilisée par l'interface pour générer les barres de progression segmentées.
+ * </p>
+ * * @author Adam & Lucie
+ */
 public enum AchievementType {
 
-    FIRST_WIN ("Série de victoires !", "Incroyable ! Vous avez enchaîné 10 victoires consécutives !"),
-    FAST_WIN("Série de victoires !", "Incroyable ! Vous avez enchaîné 50 victoires consécutives !"),
-    VETERAN_10("Série de victoires !", "Incroyable ! Vous avez enchaîné 100 victoires consécutives !");
+    // --- SUCCÈS DE BASE (Cible 1) ---
+    FIRST_WIN("PREMIER SANG", "Remportez votre première victoire navale.", 1),
+    FAST_WIN("BLITZKRIEG", "Victoire éclair en moins de 36 tours.", 1),
+    VETERAN_10("VÉTÉRAN", "Disputez un total de 10 batailles.", 10),
+
+    // --- SUCCÈS DE SÉRIE DE VICTOIRES (STREAK) ---
+    STREAK_3("TRIPLE MENACE", "Enchaînez 3 victoires consécutives.", 3),
+    STREAK_5("INARRÊTABLE", "Enchaînez 5 victoires consécutives.", 5),
+
+    // --- SUCCÈS DE PRÉCISION (GRADES) ---
+    GRADE_S("TIREUR D'ÉLITE", "Atteignez un grade de précision S (80%+).", 1),
+    GRADE_A("OFFICIER DE TIR", "Atteignez un grade de précision A (60%+).", 1),
+    GRADE_B("ARTILLEUR", "Atteignez un grade de précision B (40%+).", 1),
+    GRADE_C("APPRENTI", "Atteignez un grade de précision C (20%+).", 1),
+
+    // --- SUCCÈS VICTOIRE CONTRE IA ---
+    WIN_EASY("RECRUE", "Battez l'IA en mode débutant.", 1),
+    WIN_NORMAL("TACTICIEN", "Battez l'IA en mode normal.", 1),
+    WIN_EXPERT("LÉGENDE DES MERS", "Battez l'IA en mode expert.", 1),
+
+    // --- SUCCÈS SÉRIE DE TOUCHÉS ---
+    SHARP_SHOOTER("FINE GÂCHETTE", "Réussissez 5 tirs consécutifs sur l'ennemi.", 5),
+    BEGINNER_SHOOTER("BON DÉBUT", "Réussissez 2 tirs consécutifs sur l'ennemi.", 2);
 
     private final String name;
     private final String description;
+    private final int targetValue;
 
-    AchievementType(String name, String description){
+    /**
+     * @param name Nom affiché du succès.
+     * @param description Texte explicatif des conditions d'obtention.
+     * @param targetValue Nombre d'unités nécessaires pour débloquer le succès.
+     */
+    AchievementType(String name, String description, int targetValue) {
         this.name = name;
         this.description = description;
+        this.targetValue = targetValue;
     }
 
-    public String getName() {
-        System.out.println("je return le name");
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public int getTargetValue() { return targetValue; }
 }

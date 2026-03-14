@@ -2,6 +2,7 @@ package school.coda.adam_lucie_verena.bataillejavale.gui.component;
 
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.*;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.*;
@@ -11,67 +12,125 @@ import javafx.scene.text.Text;
 import javafx.util.Duration;
 import school.coda.adam_lucie_verena.bataillejavale.core.achievement.AchievementType;
 import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
+import school.coda.adam_lucie_verena.bataillejavale.gui.AssetsManager;
+
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
- * Conteneur invisible placé en haut de l'écran pour afficher les succès.
+ * Système de notification ultra-compact (HUD).
+ * Ne prend que l'espace nécessaire, positionné dynamiquement en bas à gauche.
  */
-public class NotificationView extends StackPane {
+public class NotificationView extends VBox {
+
+    private final Queue<AchievementType> achievementQueue = new LinkedList<>();
+    private boolean isDisplaying = false;
+
     public NotificationView() {
-        this.setPrefWidth(FXGL.getAppWidth());
-        // On laisse la hauteur s'adapter ou on met une taille raisonnable
-        this.setPrefHeight(200);
-
-        this.setAlignment(Pos.TOP_CENTER);
-        this.setPadding(new Insets(50, 0, 0, 0)); // Un peu de marge par rapport au haut
-
+        // Le composant ne capture pas les clics et s'adapte à son contenu
         this.setMouseTransparent(true);
         this.setPickOnBounds(false);
+
+        this.setLayoutX(20);
+        this.setLayoutY(FXGL.getAppHeight() - 120);
     }
 
-    public void showAchievement(AchievementType type) {
-        // Création du bandeau
-        System.out.println("[DEBUG VIEW] showAchievement reçu pour : " + type.getName());
-        System.out.println("[DEBUG VIEW] Taille actuelle du conteneur : " + getWidth() + "x" + getHeight());
-        VBox banner = new VBox(2);
-        banner.setAlignment(Pos.CENTER);
-        banner.setPadding(new Insets(10, 30, 10, 30));
-        banner.setMaxWidth(300);
+    public synchronized void showAchievement(AchievementType type) {
+        Platform.runLater(() -> {
+            achievementQueue.add(type);
+            processQueue();
+        });
+    }
 
-        // Style "Néon" raccord avec ton thème
-        banner.setStyle("-fx-background-color: rgba(2, 6, 23, 0.9); " +
-                "-fx-border-color: #00d2d3; " +
-                "-fx-border-width: 2; " +
-                "-fx-border-radius: 10; " +
-                "-fx-background-radius: 10;");
-        banner.setEffect(Theme.GLOW_CYAN);
+    private void processQueue() {
+        if (isDisplaying || achievementQueue.isEmpty()) return;
+        isDisplaying = true;
+        renderNotification(achievementQueue.poll());
+    }
 
+    private void renderNotification(AchievementType type) {
+        this.toFront();
+
+        // --- DESIGN DE LA PUCE (CHIP) ---
+        HBox banner = new HBox(15);
+        banner.setAlignment(Pos.CENTER_LEFT);
+        banner.setPadding(new Insets(10, 25, 10, 15));
+
+        // Largeur fixe compacte (ni trop grand, ni trop petit)
+        banner.setPrefWidth(320);
+
+        // Verre dépoli sombre + Bordure Néon à gauche
+        banner.setStyle(
+                "-fx-background-color: rgba(15, 23, 42, 0.95); " +
+                        "-fx-border-color: #00d2d3; " +
+                        "-fx-border-width: 0 0 0 4; " +
+                        "-fx-background-radius: 4; " +
+                        "-fx-border-radius: 4;"
+        );
+        banner.setEffect(new javafx.scene.effect.DropShadow(15, Color.web("#00d2d3", 0.3)));
+
+        // Icône Étoile
+        Text icon = new Text("★");
+        icon.setFill(Theme.CYAN);
+        icon.setFont(Theme.font(24, FontWeight.BOLD));
+
+        // Textes empilés
+        VBox textBox = new VBox(2);
         Text title = new Text("SUCCÈS DÉVERROUILLÉ");
-        title.setFill(Theme.TEXT_MUTED);
-        title.setFont(Theme.font(10, FontWeight.BOLD));
+        title.setFill(Theme.CYAN);
+        title.setFont(Theme.mono(10, FontWeight.BLACK));
 
         Text name = new Text(type.getName().toUpperCase());
         name.setFill(Color.WHITE);
-        name.setFont(Theme.font(16, FontWeight.BOLD));
+        name.setFont(Theme.font(14, FontWeight.BOLD));
 
-        banner.getChildren().addAll(title, name);
+        textBox.getChildren().addAll(title, name);
+        banner.getChildren().addAll(icon, textBox);
+
         this.getChildren().add(banner);
-        System.out.println("[DEBUG VIEW] Banner ajoutée aux enfants. Nombre d'enfants : " + getChildren().size());
 
-        // --- ANIMATION ---
-        // 1. Apparition (Slide du haut vers le bas)
-        banner.setTranslateY(-100);
-        TranslateTransition slideIn = new TranslateTransition(Duration.millis(600), banner);
-        slideIn.setToY(0);
-        slideIn.setInterpolator(Interpolator.EASE_OUT);
+        // --- DÉCLENCHEMENT DU SON ---
+        // Remplace "click.wav" par le nom de ton fichier son de succès si tu en as un spécifique
+        try {
+            AssetsManager.playSFX("bonus.wav", 1);
+        } catch (Exception e) {
+            System.err.println("Son de notification introuvable.");
+        }
+
+        // --- ANIMATIONS ---
+        banner.setTranslateX(-400); // Départ caché à gauche
+        banner.setTranslateY(0);
+        banner.setOpacity(0);
+
+        // 1. Entrée : Glisse rapide depuis la gauche avec fondu
+        ParallelTransition slideIn = new ParallelTransition();
+        TranslateTransition txIn = new TranslateTransition(Duration.millis(400), banner);
+        txIn.setToX(0);
+        txIn.setInterpolator(Interpolator.SPLINE(0.1, 0.9, 0.2, 1.0)); // Freinage très fluide
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(300), banner);
+        fadeIn.setToValue(1.0);
+        slideIn.getChildren().addAll(txIn, fadeIn);
 
         // 2. Pause
-        PauseTransition pause = new PauseTransition(Duration.seconds(3));
+        PauseTransition pause = new PauseTransition(Duration.seconds(3.5));
 
-        // 3. Disparition (Fade out)
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(500), banner);
+        // 3. Sortie : Tombe vers le bas et s'efface
+        ParallelTransition slideOut = new ParallelTransition();
+        TranslateTransition tyOut = new TranslateTransition(Duration.millis(400), banner);
+        tyOut.setByY(50);
+        tyOut.setInterpolator(Interpolator.EASE_IN); // Accélère en tombant
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(300), banner);
         fadeOut.setToValue(0);
-        fadeOut.setOnFinished(_ -> this.getChildren().remove(banner));
+        slideOut.getChildren().addAll(tyOut, fadeOut);
 
-        new SequentialTransition(slideIn, pause, fadeOut).play();
+        // Séquence
+        SequentialTransition sequence = new SequentialTransition(slideIn, pause, slideOut);
+        sequence.setOnFinished(_ -> {
+            this.getChildren().remove(banner);
+            isDisplaying = false;
+            processQueue();
+        });
+
+        sequence.play();
     }
 }

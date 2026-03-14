@@ -7,10 +7,14 @@ import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.RadialGradient;
+import javafx.scene.paint.Stop;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Coordinate;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Ship;
+import school.coda.adam_lucie_verena.bataillejavale.gui.AssetsManager;
 import school.coda.adam_lucie_verena.bataillejavale.gui.grid.GameView;
 
 import java.util.List;
@@ -54,9 +58,9 @@ public class VfxManager {
         if (isHit) {
             spawnExplosion(p.getX(), p.getY(), gridScale, Color.ORANGERED, 30, 1.0);
             shake(view, 5);
-        } else {
-            spawnSplash(p.getX(), p.getY(), gridScale);
+            return;
         }
+        spawnSplash(p.getX(), p.getY(), gridScale);
     }
 
     /**
@@ -90,6 +94,7 @@ public class VfxManager {
                     shake(view, 10);
                 }
                 spawnSmoke(p.getX(), p.getY(), gridScale);
+                AssetsManager.playSFX("explosion.wav", 0.6);
             });
             delay.play();
         }
@@ -151,39 +156,48 @@ public class VfxManager {
         g.setLayoutX(x); g.setLayoutY(y);
         g.setScaleX(scale); g.setScaleY(scale);
 
-        for (int i = 0; i < 20; i++) {
-            Circle s = new Circle(0, 0, 8 + Math.random() * 7, Color.rgb(40, 40, 40, 0.0));
-            s.setEffect(new javafx.scene.effect.GaussianBlur(12));
+        // Définition d'un dégradé radial (simule le flou sans consommer de ressources)
+        RadialGradient smokeGradient = new RadialGradient(
+                0, 0, 0.5, 0.5, 0.5, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.rgb(60, 60, 60, 0.6)),
+                new Stop(1, Color.rgb(60, 60, 60, 0.0))
+        );
 
-            s.setTranslateX((Math.random() - 0.5) * 10);
-            s.setTranslateY((Math.random() - 0.5) * 10);
+        int particleCount = 10; // Réduit de 20 à 10 pour gagner 50% de perf
 
-            double dur = 3500 + Math.random() * 2000;
-            double delay = Math.random() * 600;
+        for (int i = 0; i < particleCount; i++) {
+            Circle s = new Circle(0, 0, 15 + Math.random() * 10, smokeGradient);
 
+            // Optimisation matérielle
+            s.setCache(true);
+            s.setCacheHint(javafx.scene.CacheHint.SPEED);
+
+            s.setTranslateX((Math.random() - 0.5) * 15);
+            double dur = 3000 + Math.random() * 1500;
+            double delay = Math.random() * 400;
+
+            // On simplifie les animations
             TranslateTransition tt = new TranslateTransition(Duration.millis(dur), s);
-            tt.setByY(-100 - Math.random() * 100);
-            tt.setByX((Math.random() - 0.5) * 120);
+            tt.setByY(-80 - Math.random() * 60);
+            tt.setByX((Math.random() - 0.5) * 80);
             tt.setDelay(Duration.millis(delay));
 
             ScaleTransition st = new ScaleTransition(Duration.millis(dur), s);
-            st.setFromX(0.2); st.setFromY(0.2);
-            st.setToX(3.5); st.setToY(3.5);
+            st.setFromX(0.5); st.setFromY(0.5);
+            st.setToX(3.0);   st.setToY(3.0);
             st.setDelay(Duration.millis(delay));
 
-            Timeline fadeTimeline = new Timeline(
-                    new KeyFrame(Duration.ZERO, new KeyValue(s.fillProperty(), Color.rgb(40, 40, 40, 0.0))),
-                    new KeyFrame(Duration.millis(dur * 0.2), new KeyValue(s.fillProperty(), Color.rgb(40, 40, 40, 0.4))),
-                    new KeyFrame(Duration.millis(dur), new KeyValue(s.fillProperty(), Color.rgb(40, 40, 40, 0.0)))
-            );
-            fadeTimeline.setDelay(Duration.millis(delay));
+            FadeTransition ft = new FadeTransition(Duration.millis(dur), s);
+            ft.setFromValue(1.0);
+            ft.setToValue(0.0);
+            ft.setDelay(Duration.millis(delay));
 
             g.getChildren().add(s);
-            tt.play(); st.play(); fadeTimeline.play();
+            tt.play(); st.play(); ft.play();
         }
 
         vfxOverlay.getChildren().add(g);
-        cleanup(g, 6500);
+        cleanup(g, 5000);
     }
 
     /**

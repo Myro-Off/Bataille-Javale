@@ -76,7 +76,7 @@ public class CombatView extends StackPane {
         roundLabel.setFont(Theme.font(18, FontWeight.BOLD));
         uiLayout.setTop(turnIndicator);
 
-        VBox left = new VBox(20, playerFleet, playerStats, new SpecialAbilitiesView(), new AchievementTrackerView());
+        VBox left = new VBox(20, playerFleet, playerStats, new SpecialAbilitiesView());
         left.setPadding(new Insets(20)); left.setPrefWidth(280);
         playerStats.setFill(Theme.CYAN); playerStats.setFont(Theme.mono(12, FontWeight.BOLD));
         uiLayout.setLeft(left);

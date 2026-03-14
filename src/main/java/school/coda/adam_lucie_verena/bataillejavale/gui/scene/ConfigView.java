@@ -14,10 +14,13 @@ import school.coda.adam_lucie_verena.bataillejavale.core.ai.Difficulty;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.GameConfig;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.ShipType;
 import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
+import school.coda.adam_lucie_verena.bataillejavale.gui.AssetsManager;
+import school.coda.adam_lucie_verena.bataillejavale.gui.component.MenuButton;
 
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * Interface de configuration tactique permettant de définir les paramètres de la partie.
@@ -37,10 +40,10 @@ public class ConfigView extends HBox {
     private Difficulty selectedDifficulty = Difficulty.NORMAL;
 
     /**
-     * Construit la vue de configuration.
-     * @param currentConfig Configuration initiale à afficher.
-     * @param onValid Action déclenchée lors de la validation.
-     * @param onBack Action déclenchée lors du retour au menu.
+     * Initialise la vue de configuration avec les réglages par défaut.
+     * @param currentConfig Configuration initiale du jeu.
+     * @param onValid Callback exécuté lors du passage au déploiement.
+     * @param onBack Callback exécuté lors du retour au menu principal.
      */
     public ConfigView(GameConfig currentConfig, Consumer<GameConfig> onValid, Runnable onBack) {
         this.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
@@ -54,10 +57,10 @@ public class ConfigView extends HBox {
     }
 
     /**
-     * Construit la section de réglage des dimensions de la carte.
-     * @param config Configuration actuelle.
-     * @param onBack Action de retour.
-     * @return Conteneur VBox de la section cartographie.
+     * Construit la section de gauche dédiée aux dimensions du théâtre d'opérations.
+     * @param config Configuration actuelle pour les valeurs par défaut.
+     * @param onBack Action de retour au QG.
+     * @return Conteneur vertical de la section cartographique.
      */
     private VBox buildMapSection(GameConfig config, Runnable onBack) {
         VBox box = createTacticalPanel("SYSTÈME DE CARTOGRAPHIE");
@@ -84,25 +87,32 @@ public class ConfigView extends HBox {
             updateCapacity();
         });
 
+        Stream.of(sliderHeight, sliderWidth).forEach(s -> {
+            s.setOnMousePressed(_ -> AssetsManager.playSFX("button.wav", 1.0));
+            s.setOnMouseReleased(_ -> AssetsManager.playSFX("button.wav", 0.8));
+        });
+
+        Button btnResetGrid = new Button("RÉINITIALISER TAILLE (10x10)");
+        styleReset(btnResetGrid, "#64748b");
+        btnResetGrid.setOnAction(_ -> {
+            AssetsManager.playSFX("reset.wav", 1.0);
+            sliderWidth.setValue(10);
+            sliderHeight.setValue(10);
+        });
+
         updateGridPreview(config.gridWidth(), config.gridHeight());
 
-        Button btnBack = new Button("↩ RETOUR AU QG");
-        btnBack.setPrefWidth(200);
-        btnBack.setCursor(Theme.CURSOR_CLICK);
-        btnBack.setStyle(Theme.BTN_SECONDARY_NORMAL);
-        btnBack.setOnMouseEntered(_ -> btnBack.setStyle(Theme.BTN_SECONDARY_HOVER));
-        btnBack.setOnMouseExited(_ -> btnBack.setStyle(Theme.BTN_SECONDARY_NORMAL));
-        btnBack.setOnAction(_ -> onBack.run());
+        MenuButton btnBack = new MenuButton("RETOUR AU QG", onBack);
 
-        box.getChildren().addAll(lblWidthText, sliderWidth, lblHeightText, sliderHeight, previewContainer, btnBack);
+        box.getChildren().addAll(lblWidthText, sliderWidth, lblHeightText, sliderHeight, btnResetGrid, previewContainer, btnBack);
         return box;
     }
 
     /**
-     * Construit la section dédiée à la flotte et au choix de la doctrine (difficulté).
+     * Construit la section de droite dédiée à l'arsenal et aux paramètres de l'IA.
      * @param config Configuration actuelle.
-     * @param onValid Action de validation.
-     * @return Conteneur VBox de la section arsenal.
+     * @param onValid Action de validation finale.
+     * @return Conteneur vertical de la section arsenal.
      */
     private VBox buildFleetSection(GameConfig config, Consumer<GameConfig> onValid) {
         VBox box = createTacticalPanel("ARSENAL & DOCTRINE");
@@ -123,27 +133,36 @@ public class ConfigView extends HBox {
             fleetList.getChildren().add(createShipConfigCard(type, config.shipCounts().getOrDefault(type, 1)));
         }
 
+        Button btnResetFleet = new Button("RÉINITIALISER FLOTTE (1 DE CHAQUE)");
+        styleReset(btnResetFleet, "#64748b");
+        btnResetFleet.setOnAction(_ -> {
+            AssetsManager.playSFX("reset.wav", 1.0);
+            shipSpinners.values().forEach(s -> s.getValueFactory().setValue(1));
+            updateCapacity();
+        });
+
         btnNext = new Button("INITIALISER LA BATAILLE");
         btnNext.setPrefWidth(400);
         btnNext.setMinHeight(60);
         btnNext.setFont(Theme.font(20, FontWeight.BOLD));
         btnNext.setOnAction(_ -> {
+            AssetsManager.playSFX("good.wav", 1);
             Map<ShipType, Integer> counts = new EnumMap<>(ShipType.class);
             shipSpinners.forEach((type, spinner) -> counts.put(type, spinner.getValue()));
             onValid.accept(new GameConfig((int)sliderWidth.getValue(), (int)sliderHeight.getValue(),
                     selectedDifficulty, false, false, "Amiral", "IA", counts));
         });
 
-        box.getChildren().addAll(diffBox, new Separator(), capacityLabel, fleetList, btnNext);
+        box.getChildren().addAll(diffBox, new Separator(), capacityLabel, fleetList, btnResetFleet, btnNext);
         return box;
     }
 
     /**
-     * Crée un bouton de sélection de difficulté configuré.
-     * @param d La difficulté associée au bouton.
-     * @param group Le groupe de sélection unique.
-     * @param container Le conteneur parent pour la mise à jour visuelle groupée.
-     * @return Un ToggleButton stylisé.
+     * Crée un bouton de sélection de difficulté avec retour visuel néon.
+     * @param d Difficulté associée.
+     * @param group Groupe de boutons exclusifs.
+     * @param container Conteneur parent pour rafraîchir les styles.
+     * @return ToggleButton configuré.
      */
     private ToggleButton createDifficultyButton(Difficulty d, ToggleGroup group, HBox container) {
         ToggleButton tb = new ToggleButton(d.getLabel().toUpperCase());
@@ -155,6 +174,7 @@ public class ConfigView extends HBox {
         updateDifficultyButtonStyle(tb, d == selectedDifficulty);
 
         tb.setOnAction(_ -> {
+            AssetsManager.playSFX("button.wav", 1.0);
             selectedDifficulty = d;
             container.getChildren().forEach(node -> {
                 if (node instanceof ToggleButton btn) {
@@ -167,9 +187,9 @@ public class ConfigView extends HBox {
     }
 
     /**
-     * Applique le style visuel à un bouton de difficulté selon son état de sélection.
-     * @param btn Le bouton à styliser.
-     * @param isActive True si le bouton est l'élément sélectionné.
+     * Met à jour l'apparence des boutons de difficulté.
+     * @param btn Le bouton cible.
+     * @param isActive État de sélection.
      */
     private void updateDifficultyButtonStyle(ToggleButton btn, boolean isActive) {
         if (isActive) {
@@ -182,9 +202,9 @@ public class ConfigView extends HBox {
     }
 
     /**
-     * Crée un panneau tactique avec un style "glass" et un titre néon.
-     * @param titleStr Titre du panneau.
-     * @return VBox configurée.
+     * Crée un panneau stylisé avec effet de flou et titre thématique.
+     * @param titleStr Chaîne de caractères du titre.
+     * @return Conteneur VBox stylisé.
      */
     private VBox createTacticalPanel(String titleStr) {
         VBox box = new VBox(25);
@@ -203,9 +223,9 @@ public class ConfigView extends HBox {
     }
 
     /**
-     * Crée un label stylisé aux couleurs du thème.
-     * @param text Texte du label.
-     * @return Label configuré.
+     * Génère un label discret pour les intitulés de réglages.
+     * @param text Texte à afficher.
+     * @return Label stylisé.
      */
     private Label createStyledLabel(String text) {
         Label l = new Label(text);
@@ -215,10 +235,10 @@ public class ConfigView extends HBox {
     }
 
     /**
-     * Génère une carte de configuration pour un type de navire spécifique.
+     * Crée un élément de configuration pour un navire avec spinner interactif.
      * @param type Type de navire.
-     * @param initial Valeur initiale du spinner.
-     * @return HBox contenant les infos du navire et le spinner de quantité.
+     * @param initial Quantité de départ.
+     * @return HBox contenant la carte du navire.
      */
     private HBox createShipConfigCard(ShipType type, int initial) {
         HBox card = new HBox(15);
@@ -236,10 +256,14 @@ public class ConfigView extends HBox {
         sizeInfo.setFont(Theme.font(10, FontWeight.NORMAL));
         info.getChildren().addAll(name, sizeInfo);
 
-        Spinner<Integer> spinner = new Spinner<>(0, 999, initial);
+        Spinner<Integer> spinner = new Spinner<>(0, 10, initial);
         spinner.setPrefWidth(90);
         spinner.getStyleClass().add(Spinner.STYLE_CLASS_SPLIT_ARROWS_HORIZONTAL);
+
         spinner.valueProperty().addListener((o, old, v) -> updateCapacity());
+
+        spinner.setOnMouseClicked(_ -> AssetsManager.playSFX("button.wav", 1.0));
+
         shipSpinners.put(type, spinner);
 
         Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -248,8 +272,8 @@ public class ConfigView extends HBox {
     }
 
     /**
-     * Analyse l'occupation spatiale de la flotte et valide la configuration.
-     * Bloque le passage à l'étape suivante en cas de surcharge de la grille.
+     * Évalue la capacité de la grille par rapport au nombre de navires sélectionnés.
+     * Bloque le passage à la bataille si la flotte occupe plus de 30% de l'espace.
      */
     private void updateCapacity() {
         int w = (int) sliderWidth.getValue();
@@ -268,8 +292,8 @@ public class ConfigView extends HBox {
     }
 
     /**
-     * Crée un Slider personnalisé aux couleurs néon du thème.
-     * @param val Valeur par défaut.
+     * Configure un curseur de sélection avec le style visuel néon du thème.
+     * @param val Valeur initiale.
      * @return Slider configuré.
      */
     private Slider createNeonSlider(int val) {
@@ -280,15 +304,12 @@ public class ConfigView extends HBox {
     }
 
     /**
-     * Redessine la prévisualisation de la grille de manière centrée et contenue.
-     * Calcule dynamiquement la taille des cellules pour laisser de la place aux libellés
-     * alphanumériques sans déborder du conteneur de 400x400.
-     * * @param w Nombre de colonnes (Largeur).
-     * @param h Nombre de lignes (Hauteur).
+     * Met à jour dynamiquement le rendu graphique de la grille de prévisualisation.
+     * @param w Nombre de colonnes.
+     * @param h Nombre de lignes.
      */
     private void updateGridPreview(int w, int h) {
         gridDrawingPane.getChildren().clear();
-
         double containerSize = 400.0;
         double labelPaddingLeft = 30.0;
         double labelPaddingTop = 25.0;
@@ -296,14 +317,12 @@ public class ConfigView extends HBox {
 
         double availableWidth = containerSize - labelPaddingLeft - margin;
         double availableHeight = containerSize - labelPaddingTop - margin;
-
         double cellSize = Math.min(availableWidth / w, availableHeight / h);
 
         double gridWidth = w * cellSize;
         double gridHeight = h * cellSize;
 
         Group gridGroup = new Group();
-
         Rectangle frame = new Rectangle(0, 0, gridWidth, gridHeight);
         frame.setFill(Color.TRANSPARENT);
         frame.setStroke(Theme.GRID_FRAME);
@@ -333,10 +352,18 @@ public class ConfigView extends HBox {
                 gridGroup.getChildren().add(r);
             }
         }
-
         gridGroup.setTranslateX((containerSize - gridWidth + labelPaddingLeft) / 2.0);
         gridGroup.setTranslateY((containerSize - gridHeight + labelPaddingTop) / 2.0);
-
         gridDrawingPane.getChildren().add(gridGroup);
+    }
+
+    /**
+     * Applique un style standard aux boutons d'administration de la configuration.
+     * @param b Bouton à styliser.
+     * @param hex Couleur de fond hexadécimale.
+     */
+    private void styleReset(Button b, String hex) {
+        b.setPrefWidth(240);
+        b.setStyle("-fx-background-color: " + hex + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8; -fx-background-radius: 5;");
     }
 }

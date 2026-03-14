@@ -1,114 +1,68 @@
 package school.coda.adam_lucie_verena.bataillejavale.gui.component;
 
-import javafx.animation.ScaleTransition;
 import javafx.geometry.Pos;
-import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Glow;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.CycleMethod;
-import javafx.scene.paint.LinearGradient;
-import javafx.scene.paint.Stop;
+import javafx.scene.paint.*;
+import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.util.Duration;
+import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
+import school.coda.adam_lucie_verena.bataillejavale.gui.AssetsManager;
+
 import java.util.stream.Collectors;
 
-/**
- * Composant de bouton personnalisé pour les menus du jeu.
- * <p>
- * Ce bouton utilise un style "Néon-Cyber" avec des dégradés de bleu ardoise,
- * des bordures cyan et des effets de lueur (glow) lors du survol.
- * Il gère nativement ses propres animations de mise à l'échelle (zoom).
- * </p>
- */
 public class MenuButton extends StackPane {
+    private final Polygon bg;
+    private final Rectangle glowOverlay;
 
-    /** Couleur cyan néon signature utilisée pour les bordures et les effets. */
-    private static final Color CYAN_NEON = Color.web("#00d2d3");
-
-    /**
-     * Crée un nouveau bouton de menu stylisé.
-     * * @param name   Le texte à afficher sur le bouton.
-     * @param action La fonction (Runnable) à exécuter lors du clic.
-     */
     public MenuButton(String name, Runnable action) {
-        // Fond du bouton : un rectangle avec des coins arrondis et un dégradé subtil
-        Rectangle bg = new Rectangle(280, 45);
-        bg.setArcWidth(10);
-        bg.setArcHeight(10);
-        bg.setFill(new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE,
-                new Stop(0, Color.web("#1e293b", 0.8)),
-                new Stop(1, Color.web("#0f172a", 0.9))));
+        bg = new Polygon(0,0, 260,0, 280,15, 280,45, 20,45, 0,30);
+        bg.setFill(new LinearGradient(0,0,1,1, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.web("#1e293b", 0.6)), new Stop(1, Color.web("#020617", 0.9))));
+        bg.setStroke(Theme.CYAN.deriveColor(0, 1, 1, 0.2));
+        bg.setStrokeWidth(1.2);
 
-        // Bordure cyan semi-transparente par défaut
-        bg.setStroke(CYAN_NEON.deriveColor(0, 1, 1, 0.4));
-        bg.setStrokeWidth(1.5);
+        glowOverlay = new Rectangle(280, 45, Theme.CYAN);
+        glowOverlay.setOpacity(0);
+        glowOverlay.setClip(new Polygon(0,0, 260,0, 280,15, 280,45, 20,45, 0,30));
 
-        /*
-          Transformation du texte :
-          Convertit "JOUER" en "J O U E R" pour un style plus "Interface de commande".
-         */
-        String spacedName = name.toUpperCase().chars()
-                .mapToObj(c -> (char)c + " ")
+        String spacedName = name.toUpperCase().chars().mapToObj(c -> (char)c + " ")
                 .collect(Collectors.joining()).trim();
 
         Text text = new Text(spacedName);
-        text.setFill(Color.WHITE);
-        text.setFont(Font.font("Verdana", FontWeight.BOLD, 14));
+        text.setFill(Color.web("#94a3b8"));
+        text.setFont(Theme.font(14, FontWeight.BLACK));
 
-        // Assemblage des composants
-        getChildren().addAll(bg, text);
+        getChildren().addAll(bg, glowOverlay, text);
         setAlignment(Pos.CENTER);
 
-        // Initialisation des comportements interactifs
-        setupInteractions(bg, text, action);
+        setupInteractions(text, action);
     }
 
-    /**
-     * Configure les animations et les changements d'état lors des interactions souris.
-     * * @param bg     Le rectangle de fond à animer.
-     * @param text   Le texte dont la couleur change.
-     * @param action L'action à déclencher au clic.
-     */
-    private void setupInteractions(Rectangle bg, Text text, Runnable action) {
-        // Animation de zoom fluide
-        ScaleTransition st = new ScaleTransition(Duration.millis(150), this);
-
-        // Effet de lueur externe
-        DropShadow glow = new DropShadow(15, CYAN_NEON);
-
-        /*
-         * État : Survol (Hover)
-         * Augmente la taille, change la couleur du texte et active la lueur.
-         */
+    private void setupInteractions(Text text, Runnable action) {
         setOnMouseEntered(_ -> {
-            st.setToX(1.05);
-            st.setToY(1.05);
-            st.play();
-            bg.setStroke(CYAN_NEON);
-            bg.setEffect(glow);
-            text.setFill(CYAN_NEON);
-        });
-
-        /*
-         * État : Sortie (Normal)
-         * Réinitialise l'apparence du bouton.
-         */
-        setOnMouseExited(_ -> {
-            st.setToX(1.0);
-            st.setToY(1.0);
-            st.play();
-            bg.setStroke(CYAN_NEON.deriveColor(0, 1, 1, 0.4));
-            bg.setEffect(null);
+            bg.setStroke(Theme.CYAN);
+            bg.setStrokeWidth(2);
+            setCursor(Theme.CURSOR_CLICK);
             text.setFill(Color.WHITE);
+            glowOverlay.setOpacity(0.15);
+            this.setEffect(new Glow(0.3));
         });
 
-        /*
-         * État : Clic
-         * Exécute la logique métier passée en paramètre.
-         */
-        setOnMouseClicked(_ -> action.run());
+        setOnMouseExited(_ -> {
+            bg.setStroke(Theme.CYAN.deriveColor(0, 1, 1, 0.2));
+            bg.setStrokeWidth(1.2);
+            text.setFill(Color.web("#94a3b8"));
+            glowOverlay.setOpacity(0);
+            this.setEffect(null);
+            text.setOpacity(1.0);
+        });
+
+        setOnMouseClicked(_ -> {
+            AssetsManager.playSFX("button.wav", 2);
+            action.run();
+        });
     }
 }

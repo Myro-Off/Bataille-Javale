@@ -12,7 +12,7 @@ import javafx.scene.text.FontWeight;
 
 /**
  * Référentiel central du design de l'application.
- * Centralise les constantes visuelles pour assurer une cohérence sur toutes les scènes.
+ * Contient l'intégralité des styles et des outils graphiques.
  */
 public class Theme {
     // --- COULEURS PRIMAIRES ---
@@ -45,67 +45,26 @@ public class Theme {
     public static final String BTN_SECONDARY_NORMAL = "-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-border-color: #475569; -fx-border-radius: 5;";
     public static final String BTN_SECONDARY_HOVER = "-fx-background-color: rgba(255,255,255,0.05); -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 5;";
 
-    // --- EFFETS & CURSEURS ---
+    // --- EFFETS ---
     public static final DropShadow GLOW_CYAN = new DropShadow(15, CYAN);
     public static final DropShadow GLOW_RED = new DropShadow(15, RED_ALERTE);
     public static final DropShadow GLOW_LARGE_CYAN = new DropShadow(20, CYAN);
     public static final DropShadow GLOW_LARGE_RED = new DropShadow(20, RED_ALERTE);
     public static final DropShadow GLOW_SMALL = new DropShadow(10, RED_ALERTE);
+
+    // --- CURSEURS ---
     public static final Cursor CURSOR_CLICK = Cursor.HAND;
 
+    // --- LOGS ---
     public static final Color LOG_HIT = Color.web("#ff4757");
     public static final Color LOG_MISS = Color.web("#94a3b8");
     public static final Color LOG_SUNK = Color.web("#ff9f43");
     public static final Color LOG_SYSTEM = Color.web("#00d2d3");
 
-    /**
-     * Crée un curseur tactique naval (Cercle + Croix débordante).
-     * Généré dynamiquement pour éviter de gérer un fichier image externe.
-     */
-    private static Cursor createNavalCursor() {
-        Pane canvas = new Pane();
-        canvas.setPrefSize(32, 32);
-
-        double center = 16;
-        double radius = 7;
-        double lineExt = 12;
-
-        Circle circle = new Circle(center, center, radius, Color.TRANSPARENT);
-        circle.setStroke(CYAN);
-        circle.setStrokeWidth(1.5);
-
-        javafx.scene.shape.Line vLine = new javafx.scene.shape.Line(center, center - lineExt, center, center + lineExt);
-        javafx.scene.shape.Line hLine = new javafx.scene.shape.Line(center - lineExt, center, center + lineExt, center);
-        vLine.setStroke(CYAN); hLine.setStroke(CYAN);
-        vLine.setStrokeWidth(1.5); hLine.setStrokeWidth(1.5);
-
-        canvas.getChildren().addAll(circle, vLine, hLine);
-
-        SnapshotParameters params = new SnapshotParameters();
-        params.setFill(Color.TRANSPARENT);
-        params.setViewport(new javafx.geometry.Rectangle2D(0, 0, 32, 32));
-
-        return new ImageCursor(canvas.snapshot(params, null), center, center);
-    }
-
-    public static final Cursor CURSOR_TARGET = createNavalCursor();
-
-    /**
-     * Génère une instance de police standardisée pour le jeu.
-     * @param size Taille de la police.
-     * @param weight Épaisseur de la police.
-     * @return Font configurée.
-     */
     public static Font font(double size, FontWeight weight) {
         return Font.font("Verdana", weight, size);
     }
 
-    /**
-     * Génère une instance de police monospacée pour les statistiques numériques.
-     * @param size Taille de la police.
-     * @param weight Épaisseur de la police.
-     * @return Font Monospaced configurée.
-     */
     public static Font mono(double size, FontWeight weight) {
         return Font.font("Monospaced", weight, size);
     }

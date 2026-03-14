@@ -4,7 +4,7 @@ import javafx.scene.paint.Color;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Coordinate;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.Ship;
 import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
-import school.coda.adam_lucie_verena.bataillejavale.gui.audio.SoundManager;
+import school.coda.adam_lucie_verena.bataillejavale.gui.AssetsManager;
 import school.coda.adam_lucie_verena.bataillejavale.gui.component.GameLogView;
 
 /**
@@ -27,7 +27,7 @@ public class CombatFeedbackManager {
         Color color = shooter.equals("CMD") ? Theme.CYAN : Theme.RED_ALERTE;
 
         logView.addLog("[" + shooter + "]  IMPACT  >> " + pos, color);
-        SoundManager.playSFX("canon.wav");
+        AssetsManager.playSFX("underwater_explosion.wav", 1);
     }
 
     /**
@@ -37,7 +37,7 @@ public class CombatFeedbackManager {
         String pos = String.format("%c:%02d", (char)('A' + coord.x()), coord.y() + 1);
 
         logView.addLog("[" + shooter + "]  MANQUÉ  -- " + pos, Color.web("#64748b"));
-        SoundManager.playSFX("a_l_eau.wav");
+        AssetsManager.playSFX("miss.wav", 0.6);
     }
 
     /**

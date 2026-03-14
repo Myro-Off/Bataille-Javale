@@ -17,22 +17,21 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
 import school.coda.adam_lucie_verena.bataillejavale.core.model.*;
+import school.coda.adam_lucie_verena.bataillejavale.gui.AssetsManager;
 import school.coda.adam_lucie_verena.bataillejavale.gui.grid.GameView;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
- * Vue de préparation gérant le déploiement stratégique de la flotte avant le combat.
- * Supporte le glisser-déposer, la rotation des navires et le placement aléatoire.
+ * Vue interactive permettant au joueur de positionner ses navires sur la grille avant le combat.
+ * Gère le drag-and-drop, la rotation des navires et la validation du placement.
  */
 public class PlacementView extends Pane {
 
     private static final String CSS_NAVY = "-fx-background-color: #020617;";
     private static final String CSS_PANEL = "-fx-background-color: rgba(30, 41, 59, 0.8); -fx-background-radius: 20; -fx-border-color: #334155; -fx-border-radius: 20;";
     private static final int CELL_SIZE = 40;
-
     private static final Map<ShipType, Image> TEXTURE_CACHE = new EnumMap<>(ShipType.class);
 
     private final Board board;
@@ -46,16 +45,15 @@ public class PlacementView extends Pane {
     private ShipType draggingType = null;
     private Orientation currentOrientation = Orientation.VERTICAL;
     private Button btnStart;
-
     private double lastMouseX, lastMouseY;
 
     /**
-     * Initialise la vue de placement et prépare l'inventaire des navires.
-     * @param gridView Vue graphique de la grille.
-     * @param board Modèle de données du plateau.
-     * @param counts Configuration initiale du nombre de navires par type.
-     * @param onBack Action à exécuter pour revenir à la configuration.
-     * @param onStart Action à exécuter pour lancer la partie.
+     * Constructeur de la vue de placement.
+     * @param gridView Composant graphique de la grille.
+     * @param board Modèle logique du plateau.
+     * @param counts Quantité initiale de chaque type de navire.
+     * @param onBack Action de retour au menu.
+     * @param onStart Action de lancement de la bataille.
      */
     public PlacementView(GameView gridView, Board board, Map<ShipType, Integer> counts, Runnable onBack, Runnable onStart) {
         this.board = board;
@@ -70,19 +68,20 @@ public class PlacementView extends Pane {
     }
 
     /**
-     * Charge les textures des navires dans un cache statique si celui-ci est vide.
+     * Charge les images des navires dans un cache statique si ce n'est pas déjà fait.
      */
     private void loadTextures() {
         if (!TEXTURE_CACHE.isEmpty()) return;
         for (ShipType t : ShipType.values()) {
-            TEXTURE_CACHE.put(t, new Image(Objects.requireNonNull(getClass().getResource("/assets/textures/" + t.name().toLowerCase() + ".png")).toExternalForm()));
+            Image img = AssetsManager.loadTexture(t.name().toLowerCase() + ".png").getImage();
+            TEXTURE_CACHE.put(t, img);
         }
     }
 
     /**
-     * Construit l'interface utilisateur, incluant l'arsenal et la zone de la grille.
+     * Initialise la mise en page globale de la vue.
      * @param onBack Callback pour le bouton retour.
-     * @param onStart Callback pour le bouton de démarrage.
+     * @param onStart Callback pour le bouton de lancement.
      */
     private void initUI(Runnable onBack, Runnable onStart) {
         this.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
@@ -114,9 +113,9 @@ public class PlacementView extends Pane {
     }
 
     /**
-     * Construit le panneau latéral contenant l'inventaire et les boutons d'action.
-     * @param onBack Callback pour le bouton retour.
-     * @param onStart Callback pour le bouton de démarrage.
+     * Construit le panneau latéral contenant l'arsenal et les outils de gestion.
+     * @param onBack Action de retour.
+     * @param onStart Action de déploiement.
      * @return Le conteneur VBox de l'inventaire.
      */
     private VBox buildInventory(Runnable onBack, Runnable onStart) {
@@ -136,33 +135,89 @@ public class PlacementView extends Pane {
             }
         }
 
+        VBox helpBox = buildHelpPanel();
+
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
         Button btnRandom = new Button("PLACEMENT ALÉATOIRE");
         styleButton(btnRandom, "#f39c12");
-        btnRandom.setOnAction(_ -> applyRandomPlacement());
+        btnRandom.setOnAction(_ -> {
+            applyRandomPlacement();
+            AssetsManager.playSFX("random-button.wav", 0.6);
+        });
 
         Button btnReset = new Button("RÉINITIALISER");
         styleButton(btnReset, "#ff4757");
-        btnReset.setOnAction(_ -> resetPlacement());
+        btnReset.setOnAction(_ -> {
+                resetPlacement();
+                AssetsManager.playSFX("reset.wav", 1);
+        });
 
         Button bb = new Button("RETOUR CONFIG");
         styleButton(bb, "#64748b");
-        bb.setOnAction(_ -> onBack.run());
+        bb.setOnAction(_ -> {
+            AssetsManager.playSFX("button.wav", 1);
+            onBack.run();
+        });
 
         btnStart = new Button("DÉPLOYER LA FLOTTE");
         styleButton(btnStart, "#10b981");
-        btnStart.setOnAction(_ -> onStart.run());
+        btnStart.setOnAction(_ -> {
+            AssetsManager.playSFX("good.wav", 1);
+            onStart.run();
+        });
 
-        inv.getChildren().addAll(title, list, spacer, btnRandom, btnReset, bb, btnStart);
+        inv.getChildren().addAll(title, list, helpBox, spacer, btnRandom, btnReset, bb, btnStart);
         return inv;
     }
 
     /**
-     * Crée une carte visuelle pour un type de navire dans l'inventaire.
-     * @param type Le type de navire.
-     * @return Le conteneur VBox représentant la carte.
+     * Crée un panneau d'instructions visuelles pour les commandes de placement.
+     * @return Un VBox contenant les textes d'aide stylisés.
+     */
+    private VBox buildHelpPanel() {
+        VBox box = new VBox(8);
+        box.setPadding(new Insets(15, 0, 0, 0));
+        box.setStyle("-fx-border-color: rgba(255,255,255,0.1); -fx-border-width: 1 0 0 0;");
+
+        Text helpTitle = new Text("COMMANDES");
+        helpTitle.setFill(Color.web("#94a3b8"));
+        helpTitle.setFont(Font.font("System", FontWeight.BOLD, 12));
+
+        HBox dragInfo = createHelpRow("🖱️", "Drag & Drop pour placer");
+        HBox rotateInfo = createHelpRow("⌨️ [R]", "Rotation du navire");
+
+        box.getChildren().addAll(helpTitle, dragInfo, rotateInfo);
+        return box;
+    }
+
+    /**
+     * Utilitaire pour créer une ligne d'aide avec une icône/touche et une description.
+     * @param key Le symbole ou la touche.
+     * @param desc La description de l'action.
+     * @return Un HBox horizontal d'information.
+     */
+    private HBox createHelpRow(String key, String desc) {
+        HBox row = new HBox(10);
+        row.setAlignment(Pos.CENTER_LEFT);
+
+        Text tKey = new Text(key);
+        tKey.setFill(Color.web("#00d2d3"));
+        tKey.setFont(Font.font("System", FontWeight.BOLD, 13));
+
+        Text tDesc = new Text(desc);
+        tDesc.setFill(Color.web("#cbd5e1"));
+        tDesc.setFont(Font.font("System", 12));
+
+        row.getChildren().addAll(tKey, tDesc);
+        return row;
+    }
+
+    /**
+     * Crée une carte interactive pour un type de navire donné.
+     * @param type Le type de navire concerné.
+     * @return Le composant visuel de la carte.
      */
     private VBox createCard(ShipType type) {
         VBox card = new VBox(5);
@@ -188,6 +243,7 @@ public class PlacementView extends Pane {
 
         card.setOnMousePressed(e -> {
             if (stock.get(type) > 0 && draggingType == null) {
+                AssetsManager.playSFX("button.wav", 1);
                 startDrag(type, Orientation.VERTICAL, e.getSceneX(), e.getSceneY());
             }
         });
@@ -198,11 +254,11 @@ public class PlacementView extends Pane {
     }
 
     /**
-     * Initialise l'image fantôme pour le début d'un glisser-déposer.
-     * @param type Le type de navire à déplacer.
-     * @param o L'orientation initiale.
-     * @param x Position X initiale de la souris.
-     * @param y Position Y initiale de la souris.
+     * Initialise l'état de glissement (drag) pour un navire.
+     * @param type Type du navire sélectionné.
+     * @param o Orientation initiale.
+     * @param x Coordonnée X de la souris.
+     * @param y Coordonnée Y de la souris.
      */
     private void startDrag(ShipType type, Orientation o, double x, double y) {
         draggingType = type;
@@ -219,37 +275,35 @@ public class PlacementView extends Pane {
     }
 
     /**
-     * Met à jour la position du fantôme en fonction de la souris avec correction de dérive.
-     * @param sceneX Coordonnée X de la scène.
-     * @param sceneY Coordonnée Y de la scène.
+     * Met à jour la position de l'image fantôme selon la position du curseur.
+     * @param sceneX Position X dans la scène.
+     * @param sceneY Position Y dans la scène.
      */
     private void updateGhost(double sceneX, double sceneY) {
         lastMouseX = sceneX;
         lastMouseY = sceneY;
-
         Point2D localMouse = this.sceneToLocal(sceneX, sceneY);
-
         ghost.setTranslateX(localMouse.getX() - ghost.getBoundsInLocal().getWidth() / 2.0);
         ghost.setTranslateY(localMouse.getY() - ghost.getBoundsInLocal().getHeight() / 2.0);
     }
 
     /**
-     * Alterne l'orientation du navire en cours de déplacement.
+     * Alterne l'orientation du navire actuellement en cours de placement.
      */
     private void rotateGhost() {
         currentOrientation = (currentOrientation == Orientation.VERTICAL) ? Orientation.HORIZONTAL : Orientation.VERTICAL;
         ghost.setRotate(currentOrientation == Orientation.VERTICAL ? 0 : 90);
+        AssetsManager.playSFX("button.wav", 1);
         updateGhost(lastMouseX, lastMouseY);
     }
 
     /**
-     * Tente de poser le navire sur le plateau à la position relâchée.
-     * @param sx Coordonnée X finale.
-     * @param sy Coordonnée Y finale.
+     * Tente de déposer le navire sur la grille aux coordonnées indiquées.
+     * @param sx Coordonnée X de relâchement.
+     * @param sy Coordonnée Y de relâchement.
      */
     private void drop(double sx, double sy) {
         Point2D p = gridView.sceneToLocal(sx, sy);
-
         double wOffset = (currentOrientation == Orientation.VERTICAL ? 1 : draggingType.getSize()) * (CELL_SIZE / 2.0);
         double hOffset = (currentOrientation == Orientation.VERTICAL ? draggingType.getSize() : 1) * (CELL_SIZE / 2.0);
 
@@ -262,8 +316,10 @@ public class PlacementView extends Pane {
             board.placeShip(s);
             decrementStock(draggingType);
             gridView.updateDisplay();
+            AssetsManager.playSFX("button.wav", 1.5);
         } else {
             refreshCard(draggingType);
+            AssetsManager.playSFX("error.wav", 1);
         }
 
         ghost.setVisible(false);
@@ -272,7 +328,7 @@ public class PlacementView extends Pane {
     }
 
     /**
-     * Enregistre les écouteurs d'événements pour les interactions souris et clavier.
+     * Configure les écouteurs de scène pour les touches clavier et les filtres de souris.
      */
     private void setupEventListeners() {
         this.sceneProperty().addListener((obs, old, scene) -> {
@@ -296,8 +352,8 @@ public class PlacementView extends Pane {
     }
 
     /**
-     * Gère la sélection d'un navire déjà placé sur la grille pour le déplacer à nouveau.
-     * @param e L'événement souris de pression.
+     * Gère la sélection d'un navire déjà positionné sur la grille pour permettre son déplacement.
+     * @param e Événement de souris.
      */
     private void handleGridSelection(MouseEvent e) {
         Point2D p = gridView.sceneToLocal(e.getSceneX(), e.getSceneY());
@@ -306,6 +362,7 @@ public class PlacementView extends Pane {
         board.getShips().stream()
                 .filter(s -> s.getOccupiedCoordinates().contains(target))
                 .findFirst().ifPresent(s -> {
+                    AssetsManager.playSFX("button.wav", 1);
                     board.getShips().remove(s);
                     incrementStock(s.getType());
                     gridView.updateDisplay();
@@ -315,7 +372,7 @@ public class PlacementView extends Pane {
 
     /**
      * Augmente le stock disponible pour un type de navire donné.
-     * @param t Le type de navire à incrémenter.
+     * @param t Type du navire.
      */
     private void incrementStock(ShipType t) {
         stock.put(t, stock.get(t) + 1);
@@ -325,7 +382,7 @@ public class PlacementView extends Pane {
 
     /**
      * Diminue le stock disponible pour un type de navire donné.
-     * @param t Le type de navire à décrémenter.
+     * @param t Type du navire.
      */
     private void decrementStock(ShipType t) {
         stock.put(t, stock.get(t) - 1);
@@ -334,8 +391,8 @@ public class PlacementView extends Pane {
     }
 
     /**
-     * Rafraîchit l'affichage textuel et l'opacité d'une carte d'inventaire.
-     * @param t Le type de navire concerné.
+     * Met à jour l'affichage de la carte d'inventaire d'un navire (compteur et opacité).
+     * @param t Type du navire à rafraîchir.
      */
     private void refreshCard(ShipType t) {
         if (labels.containsKey(t)) {
@@ -345,7 +402,7 @@ public class PlacementView extends Pane {
     }
 
     /**
-     * Vide le plateau et remet les compteurs de stock à leur valeur initiale.
+     * Vide le plateau et restaure les quantités initiales de navires.
      */
     private void resetPlacement() {
         board.getShips().clear();
@@ -356,7 +413,7 @@ public class PlacementView extends Pane {
     }
 
     /**
-     * Réinitialise le plateau puis place automatiquement les navires.
+     * Réinitialise le placement et positionne tous les navires de manière aléatoire.
      */
     private void applyRandomPlacement() {
         resetPlacement();
@@ -367,7 +424,7 @@ public class PlacementView extends Pane {
     }
 
     /**
-     * Vérifie si tous les navires sont placés pour activer le bouton de validation.
+     * Vérifie si l'arsenal est vide pour activer ou désactiver le bouton de démarrage.
      */
     private void checkReady() {
         boolean ok = stock.values().stream().allMatch(v -> v == 0);
@@ -375,11 +432,6 @@ public class PlacementView extends Pane {
         btnStart.setOpacity(ok ? 1 : 0.5);
     }
 
-    /**
-     * Applique un style visuel uniforme aux boutons de l'interface.
-     * @param b Le bouton à styliser.
-     * @param hex La couleur de fond en format hexadécimal.
-     */
     private void styleButton(Button b, String hex) {
         b.setPrefWidth(240);
         b.setStyle("-fx-background-color: " + hex + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 12; -fx-background-radius: 10;");

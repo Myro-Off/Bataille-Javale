@@ -6,7 +6,7 @@ import javafx.scene.paint.Color;
 public class SpecialAbilitiesView extends VBox {
     public SpecialAbilitiesView() {
         setSpacing(10);
-        Text t = new Text("CAPACITÉS SPÉCIALES");
+        Text t = new Text("CAPACITÉS SPÉCIALES (soon)");
         t.setFill(Color.web("#00d2d3"));
         t.setFont(Font.font("Verdana", FontWeight.BOLD, 14));
         getChildren().add(t);

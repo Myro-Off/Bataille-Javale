@@ -1,6 +1,8 @@
 package school.coda.adam_lucie_verena.bataillejavale.core.engine;
 
 import com.almasb.fxgl.dsl.FXGL;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 import school.coda.adam_lucie_verena.bataillejavale.core.achievement.AchievementManager;
 import school.coda.adam_lucie_verena.bataillejavale.core.ai.*;
 import school.coda.adam_lucie_verena.bataillejavale.core.events.GameOverEvent;
@@ -17,6 +19,7 @@ public class BattleEngine {
     private final Board enemyBoard;
     private final AIStrategy aiStrategy;
     private final AchievementManager achievementManager;
+    private final Difficulty difficulty;
 
     private int totalPlayerShots = 0, totalPlayerHits = 0;
     private int totalEnemyShots = 0, totalEnemyHits = 0;
@@ -25,20 +28,17 @@ public class BattleEngine {
     /**
      * @param playerBoard Plateau du joueur.
      * @param enemyBoard Plateau de l'adversaire.
-     * @param difficulty Niveau de difficulté pour l'IA.
+     * @param diff Niveau de difficulté pour l'IA.
+     * @param achievementManager Gestionnaire des succès.
      */
-    public BattleEngine(Board playerBoard, Board enemyBoard, Difficulty difficulty, AchievementManager achievementManager) {
+    public BattleEngine(Board playerBoard, Board enemyBoard, Difficulty diff, AchievementManager achievementManager) {
         this.playerBoard = playerBoard;
         this.enemyBoard = enemyBoard;
         this.achievementManager = achievementManager;
+        this.difficulty = diff;
+        this.achievementManager.resetMidGameStats();
         this.currentState = GameState.PLAYER_TURN;
-
-//        this.aiStrategy = switch (difficulty) {
-//            case EASY -> new RandomAI();
-//            case NORMAL -> new HuntingAI();
-//            case EXPERT -> new TacticalAI();
-//        };
-        this.aiStrategy = difficulty.createAiStrategy();
+        this.aiStrategy = diff.createAiStrategy();
     }
 
     /**
@@ -62,12 +62,12 @@ public class BattleEngine {
         totalPlayerShots++;
         boolean hit = enemyBoard.receiveFire(coord);
 
+        achievementManager.trackHitStreak(hit);
+
         if (hit) totalPlayerHits++;
 
         if (enemyBoard.allShipsSunk()) {
-            achievementManager.onGameEnd(true, roundNumber);
-            currentState = GameState.GAME_OVER;
-            FXGL.getEventBus().fireEvent(new GameOverEvent(true, totalPlayerShots, totalPlayerHits));
+            finalizeGame(true);
         } else {
             currentState = GameState.AI_TURN;
         }
@@ -100,14 +100,21 @@ public class BattleEngine {
         aiStrategy.informResult(target, hit, sunk);
 
         if (playerBoard.allShipsSunk()) {
-            achievementManager.onGameEnd(false, roundNumber);
-            currentState = GameState.GAME_OVER;
-            FXGL.getEventBus().fireEvent(new GameOverEvent(false, totalPlayerShots, totalPlayerHits));
+            finalizeGame(false);
         } else {
             currentState = GameState.PLAYER_TURN;
         }
 
         return target;
+    }
+
+    private void finalizeGame(boolean won) {
+        currentState = GameState.GAME_OVER;
+        achievementManager.onGameEnd(won, roundNumber, totalPlayerShots, totalPlayerHits, difficulty);
+
+        PauseTransition delay = new PauseTransition(Duration.seconds(5));
+        delay.setOnFinished(_ -> FXGL.getEventBus().fireEvent(new GameOverEvent(won, totalPlayerShots, totalPlayerHits)));
+        delay.play();
     }
 
     /**
