@@ -87,7 +87,7 @@ public class AchievementMenuView extends StackPane {
         rat.setFont(Theme.mono(16, FontWeight.NORMAL));
         stats.getChildren().addAll(perc, rat);
 
-        HBox bar = createSegmentedBar(unlocked, total, Theme.CYAN, 25);
+        HBox bar = createSegmentedBar(500, unlocked, total, Theme.CYAN, 25);
         bar.prefWidthProperty().bind(header.widthProperty());
 
         header.getChildren().addAll(title, stats, bar);
@@ -131,8 +131,7 @@ public class AchievementMenuView extends StackPane {
         info.getChildren().addAll(titleLine, desc);
 
         if (!isUnlocked) {
-            HBox miniBar = createSegmentedBar(current, target, Theme.CYAN, Math.min(target, 30));
-            miniBar.setMaxWidth(300);
+            HBox miniBar = createSegmentedBar(250, current, target, Theme.CYAN, Math.min(target, 30));
             info.getChildren().add(miniBar);
         }
 
@@ -144,14 +143,18 @@ public class AchievementMenuView extends StackPane {
         return card;
     }
 
-    private HBox createSegmentedBar(long current, int target, Color color, int numSegments) {
+    private HBox createSegmentedBar(double totalWidth, long current, int target, Color color, int numSegments) {
         HBox container = new HBox(3);
         container.setAlignment(Pos.CENTER_LEFT);
+        container.setMinWidth(totalWidth);
+        container.setPrefWidth(totalWidth);
+        container.setMaxWidth(totalWidth);
+
         double progressRatio = (double) current / target;
+        double segmentWidth = (totalWidth - (numSegments - 1) * 3) / numSegments;
 
         for (int i = 0; i < numSegments; i++) {
-            Rectangle r = new Rectangle(0, 10);
-            r.widthProperty().bind(container.widthProperty().divide(numSegments).subtract(3));
+            Rectangle r = new Rectangle(segmentWidth, 10);
             boolean active = (i < progressRatio * numSegments);
             r.setFill(active ? color : Color.web("#1e293b"));
             if (active) r.setEffect(new javafx.scene.effect.Bloom(0.5));
