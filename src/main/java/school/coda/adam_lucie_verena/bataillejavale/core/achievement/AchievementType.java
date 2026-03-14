@@ -2,18 +2,17 @@ package school.coda.adam_lucie_verena.bataillejavale.core.achievement;
 
 /**
  * Liste exhaustive des succès déverrouillables et leurs objectifs numériques.
- * <p>
- * Chaque type définit un nom, une description et une valeur cible (targetValue)
- * utilisée par l'interface pour générer les barres de progression segmentées.
- * </p>
- * * @author Adam & Lucie
  */
 public enum AchievementType {
 
-    // --- SUCCÈS DE BASE (Cible 1) ---
+    // --- SUCCÈS DE BASE ---
     FIRST_WIN("PREMIER SANG", "Remportez votre première victoire navale.", 1),
     FAST_WIN("BLITZKRIEG", "Victoire éclair en moins de 36 tours.", 1),
+
+    // --- SUCCÈS DE LONGÉVITÉ ---
     VETERAN_10("VÉTÉRAN", "Disputez un total de 10 batailles.", 10),
+    VETERAN_50("AMIRAL", "Disputez un total de 50 batailles.", 50),
+    VETERAN_100("VIEUX LOUP DE MER", "Disputez un total de 100 batailles.", 100),
 
     // --- SUCCÈS DE SÉRIE DE VICTOIRES (STREAK) ---
     STREAK_3("TRIPLE MENACE", "Enchaînez 3 victoires consécutives.", 3),
@@ -38,11 +37,6 @@ public enum AchievementType {
     private final String description;
     private final int targetValue;
 
-    /**
-     * @param name Nom affiché du succès.
-     * @param description Texte explicatif des conditions d'obtention.
-     * @param targetValue Nombre d'unités nécessaires pour débloquer le succès.
-     */
     AchievementType(String name, String description, int targetValue) {
         this.name = name;
         this.description = description;

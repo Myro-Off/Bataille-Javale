@@ -4,28 +4,52 @@ import javafx.event.Event;
 import javafx.event.EventType;
 
 /**
- * Événement transportant les statistiques finales de la partie.
+ * Événement déclenché à la fin d'une partie.
+ * Transporte l'ensemble des statistiques finales (résultat, tirs, impacts et série)
+ * du moteur de jeu vers l'interface utilisateur.
  */
 public class GameOverEvent extends Event {
+
+    /** Type d'événement générique pour la fin de partie. */
     public static final EventType<GameOverEvent> ANY = new EventType<>(Event.ANY, "GAME_OVER");
 
     private final boolean victory;
     private final int totalShots;
     private final int totalHits;
+    private final int streak;
 
     /**
-     * @param victory    Résultat de la bataille.
-     * @param totalShots Nombre total de tirs effectués par le joueur.
-     * @param totalHits  Nombre de coups au but réussis par le joueur.
+     * Crée un nouvel événement de fin de partie.
+     * * @param victory    True si le joueur a remporté la victoire.
+     * @param totalShots Nombre total de projectiles lancés par le joueur.
+     * @param totalHits  Nombre de tirs ayant touché un navire ennemi.
+     * @param streak     Nombre de victoires consécutives actuelles (série).
      */
-    public GameOverEvent(boolean victory, int totalShots, int totalHits) {
+    public GameOverEvent(boolean victory, int totalShots, int totalHits, int streak) {
         super(ANY);
         this.victory = victory;
         this.totalShots = totalShots;
         this.totalHits = totalHits;
+        this.streak = streak;
     }
 
-    public boolean isVictory() { return victory; }
-    public int getTotalShots() { return totalShots; }
-    public int getTotalHits() { return totalHits; }
+    /** @return True en cas de victoire, false sinon. */
+    public boolean isVictory() {
+        return victory;
+    }
+
+    /** @return Le volume total de tirs effectués. */
+    public int getTotalShots() {
+        return totalShots;
+    }
+
+    /** @return Le nombre de tirs réussis. */
+    public int getTotalHits() {
+        return totalHits;
+    }
+
+    /** @return La série de victoires consécutives stockée dans l'AchievementManager. */
+    public int getStreak() {
+        return streak;
+    }
 }

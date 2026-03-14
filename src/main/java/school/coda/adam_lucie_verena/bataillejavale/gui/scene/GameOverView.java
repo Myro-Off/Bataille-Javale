@@ -21,25 +21,18 @@ import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
  */
 public class GameOverView extends StackPane {
 
-
     private final Color themeColor;
-    private static int totalSeries = 0;
 
     /**
      * Initialise la vue de fin de partie avec les résultats du combat.
      * @param isVictory Indique si le joueur a gagné.
      * @param shots Nombre total de tirs effectués.
      * @param hits Nombre total de tirs réussis.
+     * @param streak Série de victoires actuelle.
      * @param onRestart Action pour relancer une partie.
      * @param onMenu Action pour retourner au menu principal.
      */
-    public GameOverView(boolean isVictory, int shots, int hits, Runnable onRestart, Runnable onMenu) {
-        if (isVictory) {
-            totalSeries++;
-        } else {
-            totalSeries = 0;
-        }
-
+    public GameOverView(boolean isVictory, int shots, int hits, int streak, Runnable onRestart, Runnable onMenu) {
         this.themeColor = isVictory ? Theme.CYAN : Theme.RED_ALERTE;
         setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
 
@@ -50,7 +43,7 @@ public class GameOverView extends StackPane {
         root.setPadding(new Insets(100));
 
         VBox header = buildHeader(isVictory, shots, hits);
-        HBox statsArea = buildStatsArea(shots, hits);
+        HBox statsArea = buildStatsArea(shots, hits, streak);
 
         HBox actions = new HBox(30,
                 new MenuButton("REJOUER", onRestart),
@@ -82,8 +75,6 @@ public class GameOverView extends StackPane {
             AssetsManager.playMusic("lose.mp3", 0.6);
         }
 
-        label.setFill(Color.web("#94a3b8"));
-        label.setFont(Font.font("Verdana", 20));
         label.setFill(Theme.TEXT_MUTED);
         label.setFont(Theme.font(20, FontWeight.NORMAL));
 
@@ -119,7 +110,7 @@ public class GameOverView extends StackPane {
     /**
      * Construit la zone centrale affichant les compteurs statistiques.
      */
-    private HBox buildStatsArea(int shots, int hits) {
+    private HBox buildStatsArea(int shots, int hits, int streak) {
         HBox box = new HBox(80);
         box.setAlignment(Pos.CENTER);
         box.setPadding(new Insets(40));
@@ -134,7 +125,7 @@ public class GameOverView extends StackPane {
                 createDivider(),
                 createLargeStat("PRÉCISION", String.format("%.1f%%", acc)),
                 createDivider(),
-                createLargeStat("SERIE", String.valueOf(totalSeries))
+                createLargeStat("SERIE", String.valueOf(streak))
         );
 
         return box;
