@@ -60,7 +60,13 @@ public class AchievementMenuView extends StackPane {
 
         MenuButton btnBack = new MenuButton("RETOUR AU QG", onBack);
 
-        root.getChildren().addAll(header, scroll, btnBack);
+        MenuButton btnReset = new MenuButton("RESET LES ARCHIVES", () -> {
+            manager.resetAll();
+            onBack.run();
+        });
+        btnReset.setStyle("-fx-base: #e74c3c;");
+
+        root.getChildren().addAll(header, scroll, btnBack, btnReset);
         getChildren().add(root);
     }
 

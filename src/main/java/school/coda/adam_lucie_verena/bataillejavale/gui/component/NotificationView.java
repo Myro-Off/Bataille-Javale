@@ -38,8 +38,9 @@ public class NotificationView extends StackPane {
 
         achievementContainer.setPadding(new Insets(0, 0, 150, 20));
         achievementContainer.setMaxHeight(Region.USE_PREF_SIZE);
+        achievementContainer.setMaxWidth(Region.USE_PREF_SIZE);
+        achievementContainer.setFillWidth(false);
         StackPane.setAlignment(achievementContainer, Pos.BOTTOM_LEFT);
-
         eventContainer.setPadding(new Insets(0, 0, 30, 0));
         eventContainer.setMaxHeight(Region.USE_PREF_SIZE);
         eventContainer.setAlignment(Pos.BOTTOM_CENTER);

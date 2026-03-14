@@ -18,6 +18,7 @@ public class AchievementManager {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private final Map<String, String> unlockedAchievements = new HashMap<>();
+
     private int totalGamesPlayed = 0;
     private int totalWins = 0;
     private int currentWinStreak = 0;
@@ -34,9 +35,6 @@ public class AchievementManager {
         this.notificationView = view;
     }
 
-    /**
-     * Traite les résultats d'une partie.
-     */
     public void onGameEnd(boolean won, int rounds, int shots, int hits, Difficulty difficulty) {
         totalGamesPlayed++;
 
@@ -82,6 +80,7 @@ public class AchievementManager {
         } else {
             currentHitStreak = 0;
         }
+        saveData();
     }
 
     public void resetMidGameStats() {
@@ -116,6 +115,23 @@ public class AchievementManager {
             case SHARP_SHOOTER, BEGINNER_SHOOTER -> maxHitStreak;
             default -> 0;
         };
+    }
+
+    /**
+     * RÉINITIALISATION TOTALE
+     */
+    public void resetAll() {
+        this.unlockedAchievements.clear();
+
+        this.totalGamesPlayed = 0;
+        this.totalWins = 0;
+        this.currentWinStreak = 0;
+        this.currentHitStreak = 0;
+        this.maxHitStreak = 0;
+
+        saveData();
+
+        System.out.println("Archives tactiques réinitialisées avec succès.");
     }
 
     private void saveData() {
