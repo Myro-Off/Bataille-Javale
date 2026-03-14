@@ -5,14 +5,19 @@ package school.coda.adam_lucie_verena.bataillejavale.core.achievement;
  */
 public enum AchievementType {
 
-    // --- SUCCÈS DE BASE ---
+    // --- SUCCÈS DE BASE (PROF) ---
     FIRST_WIN("PREMIER SANG", "Remportez votre première victoire navale.", 1),
     FAST_WIN("BLITZKRIEG", "Victoire éclair en moins de 36 tours.", 1),
 
-    // --- SUCCÈS DE LONGÉVITÉ ---
+    // --- SUCCÈS DE LONGÉVITÉ (PROF) ---
     VETERAN_10("VÉTÉRAN", "Disputez un total de 10 batailles.", 10),
     VETERAN_50("AMIRAL", "Disputez un total de 50 batailles.", 50),
     VETERAN_100("VIEUX LOUP DE MER", "Disputez un total de 100 batailles.", 100),
+
+    // --- SUCCÈS SECRETS & MODES (PROF) ---
+    KONAMI_CODE("SECRET : KONAMI CODE", "U, U, D, D, L, R, L, R, B, A.", 1),
+    WIN_SALVE("SALVE DE VICTOIRE", "Remportez une bataille en mode Salve.", 1),
+    TUI_MASTER("TERMINAL COMMANDER", "Terminez une partie via l'interface textuelle.", 1),
 
     // --- SUCCÈS DE SÉRIE DE VICTOIRES (STREAK) ---
     STREAK_3("TRIPLE MENACE", "Enchaînez 3 victoires consécutives.", 3),
@@ -31,7 +36,11 @@ public enum AchievementType {
 
     // --- SUCCÈS SÉRIE DE TOUCHÉS ---
     SHARP_SHOOTER("FINE GÂCHETTE", "Réussissez 5 tirs consécutifs sur l'ennemi.", 5),
-    BEGINNER_SHOOTER("BON DÉBUT", "Réussissez 2 tirs consécutifs sur l'ennemi.", 2);
+    BEGINNER_SHOOTER("BON DÉBUT", "Réussissez 2 tirs consécutifs sur l'ennemi.", 2),
+
+    // --- SUCCÈS EVENTS (PROF) ---
+    METEOR_KILL("MORT VENUE DU CIEL", "Un navire a été coulé par une météorite.", 1),
+    SUNNY_DAY("JOURNÉE ENSOLEILLÉE", "Le soleil brille, tout le monde est récompensé !", 1);
 
     private final String name;
     private final String description;

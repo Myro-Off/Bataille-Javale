@@ -11,6 +11,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Circle;
@@ -185,18 +186,74 @@ public class GameView extends Pane {
     public void updateDisplay() {
         markersLayer.getChildren().clear();
         shipsLayer.getChildren().clear();
-        for (Ship ship : board.getShips()) {
-            if (isPlayerView || ship.isSunk()) drawShipTexture(ship);
-        }
-        for (Coordinate miss : board.getMissedShots()) {
 
-            addMissMarker(miss.x(), miss.y(), animatedCoords.add(miss));
+        // État de brouillage : Uniquement sur le radar ennemi si le fog est actif
+        boolean isJammed = !isPlayerView && board.isFogActive();
+
+        if (isJammed) {
+            applyGlitchEffect();
+        } else {
+            this.setEffect(null); // On retire l'effet si le brouillage est fini
         }
-        for (Coordinate hit : board.getHitShots()) {
-            boolean isNew = animatedCoords.add(hit);
-            addHitMarker(hit.x(), hit.y(), isNew);
-            if (isNew) shakeGrid();
+
+        // 1. RENDU DES NAVIRES
+        // Si brouillé, on ne dessine RIEN (on cache même les épaves déjà connues)
+        if (!isJammed) {
+            for (Ship ship : board.getShips()) {
+                if (isPlayerView || ship.isSunk()) drawShipTexture(ship);
+            }
         }
+
+        // 2. RENDU DES MARQUEURS (TIRS)
+        if (isJammed) {
+            for (Coordinate coord : board.getShotsHistory()) {
+                drawUnknownMarker(coord);
+            }
+        } else {
+            renderNormalMarkers();
+        }
+    }
+
+    /**
+     * Ajoute un indicateur visuel de débris enflammés pour signaler un impact de météore.
+     */
+    private void addMeteorIndicator(int x, int y) {
+        double size = 8;
+        Circle flame = new Circle(size / 2.0, Color.ORANGERED);
+        flame.setStroke(Color.YELLOW);
+        flame.setStrokeWidth(1);
+        flame.setEffect(new javafx.scene.effect.Glow(0.8));
+
+        // Positionnement en haut à droite de la case
+        flame.setLayoutX(x * CELL_SIZE + OFFSET + CELL_SIZE - 10);
+        flame.setLayoutY(y * CELL_SIZE + OFFSET + 10);
+
+        markersLayer.getChildren().add(flame);
+
+        // Petite animation de scintillement
+        Timeline flash = new Timeline(
+                new KeyFrame(Duration.seconds(0.5), new KeyValue(flame.opacityProperty(), 0.4)),
+                new KeyFrame(Duration.seconds(1.0), new KeyValue(flame.opacityProperty(), 1.0))
+        );
+        flash.setCycleCount(Animation.INDEFINITE);
+        flash.setAutoReverse(true);
+        flash.play();
+    }
+
+    /**
+     * Active l'apparence visuelle de l'Apocalypse sur la grille.
+     */
+    public void applyApocalypseEffect() {
+        gridLayer.getChildren().forEach(node -> {
+            if (node instanceof Rectangle rect) {
+                rect.setStroke(Color.web("#ff4757", 0.8));
+                rect.setStrokeWidth(1.2);
+            }
+        });
+
+        javafx.scene.effect.DropShadow ds = new javafx.scene.effect.DropShadow(30, Color.RED);
+        ds.setSpread(0.2);
+        this.setEffect(ds);
     }
 
     /**
@@ -225,12 +282,12 @@ public class GameView extends Pane {
     private void addHitMarker(int x, int y, boolean animate) {
         double center = CELL_SIZE / 2.0;
         double radius = CELL_SIZE * 0.4;
-        RadialGradient grad = new RadialGradient(0, 0, center, center, radius, false, javafx.scene.paint.CycleMethod.NO_CYCLE, new Stop(0.0, Color.web("#fbc531")), new Stop(0.3, Color.ORANGERED), new Stop(1.0, Color.TRANSPARENT));
+        RadialGradient grad = new RadialGradient(0, 0, center, center, radius, false, CycleMethod.NO_CYCLE, new Stop(0.0, Color.web("#fbc531")), new Stop(0.3, Color.ORANGERED), new Stop(1.0, Color.TRANSPARENT));
         Circle glowingCenter = new Circle(center, center, radius * 0.8, grad);
         glowingCenter.setEffect(Theme.GLOW_SMALL);
         glowingCenter.setLayoutX(x * CELL_SIZE + OFFSET); glowingCenter.setLayoutY(y * CELL_SIZE + OFFSET);
         markersLayer.getChildren().add(glowingCenter);
-        if (animate) animateSparks(x, y, center);
+        if (animate && !board.isFogActive()) animateSparks(x, y, center);
     }
 
     /**
@@ -296,5 +353,59 @@ public class GameView extends Pane {
     public void autoScale(double maxWidth, double maxHeight) {
         double scale = Math.min(1.0, Math.min(maxWidth / getPrefWidth(), maxHeight / getPrefHeight()));
         this.getTransforms().setAll(new Scale(scale, scale, 0, 0));
+    }
+
+    /**
+     * Affiche un point d'interrogation sur une case ciblée durant le brouillage.
+     */
+    private void drawUnknownMarker(Coordinate c) {
+        Text qMark = new Text("?");
+        qMark.setFill(Theme.CYAN);
+        qMark.setFont(Theme.mono(22, FontWeight.BOLD));
+
+        // Centrage approximatif dans la case
+        qMark.setX(c.x() * CELL_SIZE + OFFSET + 14);
+        qMark.setY(c.y() * CELL_SIZE + OFFSET + 28);
+
+        // Petite animation de flottement pour le côté "bug"
+        Timeline pulse = new Timeline(
+                new KeyFrame(Duration.seconds(0.5), new KeyValue(qMark.opacityProperty(), 0.3)),
+                new KeyFrame(Duration.seconds(1.0), new KeyValue(qMark.opacityProperty(), 1.0))
+        );
+        pulse.setCycleCount(Animation.INDEFINITE);
+        pulse.setAutoReverse(true);
+        pulse.play();
+
+        markersLayer.getChildren().add(qMark);
+    }
+
+    /**
+     * Applique un effet visuel de "bug" ou de distorsion sur la grille.
+     */
+    private void applyGlitchEffect() {
+        javafx.scene.effect.ColorAdjust glitch = new javafx.scene.effect.ColorAdjust();
+        glitch.setContrast(0.3);
+        glitch.setHue(-0.05);
+        glitch.setSaturation(-0.2);
+        this.setEffect(glitch);
+    }
+
+    /**
+     * Encapsule la logique de rendu normal (ton code précédent).
+     */
+    private void renderNormalMarkers() {
+        for (Coordinate miss : board.getMissedShots()) {
+            if (!isPlayerView && board.isMeteorImpact(miss) && !board.getShotsHistory().contains(miss)) continue;
+            addMissMarker(miss.x(), miss.y(), animatedCoords.add(miss));
+            if (isPlayerView && board.isMeteorImpact(miss)) addMeteorIndicator(miss.x(), miss.y());
+        }
+
+        for (Coordinate hit : board.getHitShots()) {
+            if (!isPlayerView && board.isMeteorImpact(hit) && !board.getShotsHistory().contains(hit)) continue;
+            boolean isNew = animatedCoords.add(hit);
+            addHitMarker(hit.x(), hit.y(), isNew);
+            if (isNew) shakeGrid();
+            if (isPlayerView && board.isMeteorImpact(hit)) addMeteorIndicator(hit.x(), hit.y());
+        }
     }
 }

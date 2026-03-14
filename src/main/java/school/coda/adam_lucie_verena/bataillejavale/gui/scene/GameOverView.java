@@ -8,7 +8,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
+import javafx.scene.shape.SVGPath;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
@@ -17,20 +17,21 @@ import school.coda.adam_lucie_verena.bataillejavale.gui.component.MenuButton;
 import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
 
 /**
- * Ecran de fin de partie affichant le rapport de mission, les statistiques et le grade obtenu.
+ * Vue de fin de partie présentant les résultats finaux du combat.
+ * Affiche les statistiques de tirs, la précision ainsi qu'un grade basé sur la performance.
  */
 public class GameOverView extends StackPane {
 
     private final Color themeColor;
 
     /**
-     * Initialise la vue de fin de partie avec les résultats du combat.
-     * @param isVictory Indique si le joueur a gagné.
-     * @param shots Nombre total de tirs effectués.
-     * @param hits Nombre total de tirs réussis.
-     * @param streak Série de victoires actuelle.
-     * @param onRestart Action pour relancer une partie.
-     * @param onMenu Action pour retourner au menu principal.
+     * Construit l'écran de fin de partie.
+     * @param isVictory État de victoire ou défaite.
+     * @param shots Nombre total de projectiles lancés.
+     * @param hits Nombre total d'impacts confirmés.
+     * @param streak Série de victoires consécutives.
+     * @param onRestart Action à exécuter pour recommencer une partie.
+     * @param onMenu Action à exécuter pour retourner à l'accueil.
      */
     public GameOverView(boolean isVictory, int shots, int hits, int streak, Runnable onRestart, Runnable onMenu) {
         this.themeColor = isVictory ? Theme.CYAN : Theme.RED_ALERTE;
@@ -50,7 +51,6 @@ public class GameOverView extends StackPane {
                 new MenuButton("MENU PRINCIPAL", onMenu)
         );
         actions.setAlignment(Pos.CENTER);
-        actions.setOnMouseClicked(_ -> AssetsManager.playMusic("mainmenu.mp3", 0.2));
 
         root.getChildren().addAll(header, statsArea, actions);
         getChildren().addAll(bg, root);
@@ -58,9 +58,6 @@ public class GameOverView extends StackPane {
         animateEntrance(root);
     }
 
-    /**
-     * Construit l'en-tête contenant le titre de mission et le grade.
-     */
     private VBox buildHeader(boolean isVictory, int shots, int hits) {
         VBox box = new VBox(10);
         box.setAlignment(Pos.CENTER);
@@ -95,9 +92,6 @@ public class GameOverView extends StackPane {
         return box;
     }
 
-    /**
-     * Détermine le grade en fonction du résultat et de la précision.
-     */
     private String calculateRank(boolean isVictory, double accuracy) {
         if (!isVictory) return "E";
         if (accuracy > 80) return "S";
@@ -107,11 +101,8 @@ public class GameOverView extends StackPane {
         return "E";
     }
 
-    /**
-     * Construit la zone centrale affichant les compteurs statistiques.
-     */
     private HBox buildStatsArea(int shots, int hits, int streak) {
-        HBox box = new HBox(80);
+        HBox box = new HBox(60);
         box.setAlignment(Pos.CENTER);
         box.setPadding(new Insets(40));
         box.setStyle(Theme.STATS_BOX);
@@ -125,15 +116,63 @@ public class GameOverView extends StackPane {
                 createDivider(),
                 createLargeStat("PRÉCISION", String.format("%.1f%%", acc)),
                 createDivider(),
-                createLargeStat("SERIE", String.valueOf(streak))
+                createStreakStat(streak)
         );
 
         return box;
     }
 
     /**
-     * Crée un bloc statistique individuel.
+     * Crée un bloc statistique stylisé pour la série de victoires.
+     * @param streak Valeur de la série.
+     * @return Un conteneur VBox avec un effet visuel de "feu".
      */
+    private VBox createStreakStat(int streak) {
+        VBox v = new VBox(5);
+        v.setAlignment(Pos.CENTER);
+
+        Text l = new Text("SÉRIE");
+        l.setFill(Theme.TEXT_DIMMED);
+        l.setFont(Theme.font(16, FontWeight.NORMAL));
+
+        HBox valueBox = new HBox(15);
+        valueBox.setAlignment(Pos.CENTER);
+
+        Text val = new Text(String.valueOf(streak));
+        val.setFont(Theme.mono(48, FontWeight.BOLD));
+
+        SVGPath icon = new SVGPath();
+        icon.setContent("M12,2 C12,2 10.5,7 12,11 C13.5,15 17,15 17,21 " +
+                "C17,25.5 13,29 8,29 C3,29 -1,25.5 -1,21 " +
+                "C-1,15.5 3,11 8,2 C8,2 6.5,7.5 8,11.5 " +
+                "C9.5,15.5 12,15.5 12,2 Z");
+
+        icon.setScaleX(1.8);
+        icon.setScaleY(1.8);
+
+        if (streak > 2) {
+            Color gold = Color.web("#fbc531");
+            val.setFill(gold);
+            icon.setFill(gold);
+            val.setEffect(Theme.GLOW_SMALL);
+            icon.setEffect(Theme.GLOW_SMALL);
+
+            ScaleTransition pulse = new ScaleTransition(Duration.seconds(0.6), icon);
+            pulse.setFromX(1.8); pulse.setFromY(1.8);
+            pulse.setToX(2.1); pulse.setToY(2.1);
+            pulse.setCycleCount(Animation.INDEFINITE);
+            pulse.setAutoReverse(true);
+            pulse.play();
+        } else {
+            val.setFill(Color.WHITE);
+            icon.setFill(themeColor);
+        }
+
+        valueBox.getChildren().addAll(val, icon);
+        v.getChildren().addAll(l, valueBox);
+        return v;
+    }
+
     private VBox createLargeStat(String label, String value) {
         VBox v = new VBox(10);
         v.setAlignment(Pos.CENTER);
@@ -149,9 +188,6 @@ public class GameOverView extends StackPane {
         return v;
     }
 
-    /**
-     * Crée une ligne de séparation verticale pour les statistiques.
-     */
     private Line createDivider() {
         Line l = new Line(0, 0, 0, 60);
         l.setStroke(Theme.DIVIDER);
@@ -159,9 +195,6 @@ public class GameOverView extends StackPane {
         return l;
     }
 
-    /**
-     * Exécute les transitions d'opacité et d'échelle à l'apparition de la vue.
-     */
     private void animateEntrance(VBox root) {
         root.setOpacity(0);
         root.setScaleX(0.9);

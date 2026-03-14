@@ -5,132 +5,181 @@ import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
+import org.jetbrains.annotations.NotNull;
 import school.coda.adam_lucie_verena.bataillejavale.core.achievement.AchievementType;
+import school.coda.adam_lucie_verena.bataillejavale.core.events.RandomEventType;
 import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
 import school.coda.adam_lucie_verena.bataillejavale.gui.AssetsManager;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 /**
- * Système de notification ultra-compact (HUD).
- * Ne prend que l'espace nécessaire, positionné dynamiquement en bas à gauche.
+ * HUD de notifications gérant les succès (pile gauche) et les événements (barre basse).
  */
-public class NotificationView extends VBox {
+public class NotificationView extends StackPane {
+
+    private final VBox achievementContainer = new VBox(10);
+    private final HBox eventContainer = new HBox(15);
 
     private final Queue<AchievementType> achievementQueue = new LinkedList<>();
-    private boolean isDisplaying = false;
+    private final Map<RandomEventType, Node> activeEventNodes = new HashMap<>();
+    private int visibleAchievements = 0;
 
     public NotificationView() {
-        // Le composant ne capture pas les clics et s'adapte à son contenu
         this.setMouseTransparent(true);
         this.setPickOnBounds(false);
+        this.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
 
-        this.setLayoutX(20);
-        this.setLayoutY(FXGL.getAppHeight() - 120);
+        achievementContainer.setPadding(new Insets(0, 0, 150, 20));
+        achievementContainer.setMaxHeight(Region.USE_PREF_SIZE);
+        StackPane.setAlignment(achievementContainer, Pos.BOTTOM_LEFT);
+
+        eventContainer.setPadding(new Insets(0, 0, 30, 0));
+        eventContainer.setMaxHeight(Region.USE_PREF_SIZE);
+        eventContainer.setAlignment(Pos.BOTTOM_CENTER);
+        StackPane.setAlignment(eventContainer, Pos.BOTTOM_CENTER);
+
+        this.getChildren().addAll(achievementContainer, eventContainer);
     }
 
     public synchronized void showAchievement(AchievementType type) {
         Platform.runLater(() -> {
             achievementQueue.add(type);
-            processQueue();
+            processAchievementQueue();
         });
     }
 
-    private void processQueue() {
-        if (isDisplaying || achievementQueue.isEmpty()) return;
-        isDisplaying = true;
-        renderNotification(achievementQueue.poll());
+    private void processAchievementQueue() {
+        if (visibleAchievements >= 3 || achievementQueue.isEmpty()) return;
+        visibleAchievements++;
+        renderAchievement(achievementQueue.poll());
     }
 
-    private void renderNotification(AchievementType type) {
-        this.toFront();
+    private void renderAchievement(AchievementType type) {
+        HBox banner = createBanner(type.getName().toUpperCase(), "★ SUCCÈS DÉBLOQUÉ", "#00d2d3");
+        achievementContainer.getChildren().addFirst(banner);
 
-        // --- DESIGN DE LA PUCE (CHIP) ---
-        HBox banner = new HBox(15);
+        AssetsManager.playSFX("bonus.wav", 1.0);
+        animateIn(banner, -400, 0);
+
+        PauseTransition pause = new PauseTransition(Duration.seconds(4));
+        pause.setOnFinished(_ -> animateOut(banner, () -> {
+            achievementContainer.getChildren().remove(banner);
+            visibleAchievements--;
+            processAchievementQueue();
+        }));
+        pause.play();
+    }
+
+    // --- GESTION DES ÉVÉNEMENTS ---
+
+    public void showEvent(RandomEventType type) {
+        // On ne montre pas de notification pour l'Apocalypse (gérée par l'alerte rouge)
+        if (type == RandomEventType.APOCALYPSE) return;
+
+        Platform.runLater(() -> {
+            if (activeEventNodes.containsKey(type)) return;
+
+            String color = getEventColor(type);
+            HBox eventBox = createBanner(type.getTitle().toUpperCase(), "ALERTE SYSTÈME", color);
+
+            // --- STYLE PLUS AGRESSIF ---
+            eventBox.setPrefWidth(350);
+            eventBox.setStyle(eventBox.getStyle() + "-fx-border-width: 2 2 2 6;"); // Bordure plus épaisse
+
+            activeEventNodes.put(type, eventBox);
+            eventContainer.getChildren().add(eventBox);
+
+            AssetsManager.playSFX("error.wav", 1.0);
+            animateIn(eventBox, 0, 100);
+        });
+    }
+
+    public void hideEvent(RandomEventType type) {
+        Platform.runLater(() -> {
+            Node node = activeEventNodes.remove(type);
+            if (node != null) {
+                eventContainer.getChildren().remove(node);
+            }
+        });
+    }
+
+    private String getEventColor(RandomEventType type) {
+        return switch (type) {
+            case RAVITAILLEMENT_GRATUIT, JOURNEE_ENSOLEILLEE, SALVE_BOOSTEE -> "#2ecc71"; // VERT
+            case APOCALYPSE, METEORES -> "#e74c3c"; // ROUGE
+            default -> "#f39c12"; // ORANGE
+        };
+    }
+
+    // --- UTILITAIRES ---
+
+    private HBox createBanner(String nameStr, String titleStr, String colorHex) {
+        HBox banner = getHBox(colorHex);
+
+        VBox texts = new VBox(1);
+        texts.setAlignment(Pos.CENTER_LEFT);
+
+        Text t = new Text(titleStr);
+        t.setFill(Color.web(colorHex));
+        t.setFont(Theme.mono(9, FontWeight.BLACK));
+
+        Text n = new Text(nameStr);
+        n.setFill(Color.WHITE);
+        n.setFont(Theme.font(12, FontWeight.BOLD));
+
+        texts.getChildren().addAll(t, n);
+        banner.getChildren().add(texts);
+
+        return banner;
+    }
+
+    @NotNull
+    private static HBox getHBox(String colorHex) {
+        HBox banner = new HBox(12);
         banner.setAlignment(Pos.CENTER_LEFT);
-        banner.setPadding(new Insets(10, 25, 10, 15));
+        banner.setPadding(new Insets(10, 15, 10, 10));
 
-        // Largeur fixe compacte (ni trop grand, ni trop petit)
-        banner.setPrefWidth(320);
+        banner.setMinHeight(55);
+        banner.setMaxHeight(55);
 
-        // Verre dépoli sombre + Bordure Néon à gauche
         banner.setStyle(
                 "-fx-background-color: rgba(15, 23, 42, 0.95); " +
-                        "-fx-border-color: #00d2d3; " +
+                        "-fx-border-color: " + colorHex + "; " +
                         "-fx-border-width: 0 0 0 4; " +
                         "-fx-background-radius: 4; " +
                         "-fx-border-radius: 4;"
         );
-        banner.setEffect(new javafx.scene.effect.DropShadow(15, Color.web("#00d2d3", 0.3)));
+        return banner;
+    }
 
-        // Icône Étoile
-        Text icon = new Text("★");
-        icon.setFill(Theme.CYAN);
-        icon.setFont(Theme.font(24, FontWeight.BOLD));
+    private void animateIn(Node node, double fromX, double fromY) {
+        node.setOpacity(0);
+        TranslateTransition tt = new TranslateTransition(Duration.millis(400), node);
+        if (fromX != 0) { tt.setFromX(fromX); tt.setToX(0); }
+        if (fromY != 0) { tt.setFromY(fromY); tt.setToY(0); }
+        FadeTransition ft = new FadeTransition(Duration.millis(300), node);
+        ft.setToValue(1);
+        new ParallelTransition(tt, ft).play();
+    }
 
-        // Textes empilés
-        VBox textBox = new VBox(2);
-        Text title = new Text("SUCCÈS DÉVERROUILLÉ");
-        title.setFill(Theme.CYAN);
-        title.setFont(Theme.mono(10, FontWeight.BLACK));
+    private void animateOut(Node node, Runnable onFinished) {
+        FadeTransition ft = new FadeTransition(Duration.millis(300), node);
+        ft.setToValue(0);
+        ft.setOnFinished(_ -> onFinished.run());
+        ft.play();
+    }
 
-        Text name = new Text(type.getName().toUpperCase());
-        name.setFill(Color.WHITE);
-        name.setFont(Theme.font(14, FontWeight.BOLD));
-
-        textBox.getChildren().addAll(title, name);
-        banner.getChildren().addAll(icon, textBox);
-
-        this.getChildren().add(banner);
-
-        // --- DÉCLENCHEMENT DU SON ---
-        // Remplace "click.wav" par le nom de ton fichier son de succès si tu en as un spécifique
-        try {
-            AssetsManager.playSFX("bonus.wav", 1);
-        } catch (Exception e) {
-            System.err.println("Son de notification introuvable.");
-        }
-
-        // --- ANIMATIONS ---
-        banner.setTranslateX(-400); // Départ caché à gauche
-        banner.setTranslateY(0);
-        banner.setOpacity(0);
-
-        // 1. Entrée : Glisse rapide depuis la gauche avec fondu
-        ParallelTransition slideIn = new ParallelTransition();
-        TranslateTransition txIn = new TranslateTransition(Duration.millis(400), banner);
-        txIn.setToX(0);
-        txIn.setInterpolator(Interpolator.SPLINE(0.1, 0.9, 0.2, 1.0)); // Freinage très fluide
-        FadeTransition fadeIn = new FadeTransition(Duration.millis(300), banner);
-        fadeIn.setToValue(1.0);
-        slideIn.getChildren().addAll(txIn, fadeIn);
-
-        // 2. Pause
-        PauseTransition pause = new PauseTransition(Duration.seconds(3.5));
-
-        // 3. Sortie : Tombe vers le bas et s'efface
-        ParallelTransition slideOut = new ParallelTransition();
-        TranslateTransition tyOut = new TranslateTransition(Duration.millis(400), banner);
-        tyOut.setByY(50);
-        tyOut.setInterpolator(Interpolator.EASE_IN); // Accélère en tombant
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(300), banner);
-        fadeOut.setToValue(0);
-        slideOut.getChildren().addAll(tyOut, fadeOut);
-
-        // Séquence
-        SequentialTransition sequence = new SequentialTransition(slideIn, pause, slideOut);
-        sequence.setOnFinished(_ -> {
-            this.getChildren().remove(banner);
-            isDisplaying = false;
-            processQueue();
+    public void clearEvents() {
+        Platform.runLater(() -> {
+            activeEventNodes.clear();
+            eventContainer.getChildren().clear();
         });
-
-        sequence.play();
     }
 }

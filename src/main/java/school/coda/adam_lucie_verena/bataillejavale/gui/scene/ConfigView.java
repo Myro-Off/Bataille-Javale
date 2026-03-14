@@ -1,6 +1,8 @@
 package school.coda.adam_lucie_verena.bataillejavale.gui.scene;
 
 import com.almasb.fxgl.dsl.FXGL;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -16,354 +18,476 @@ import school.coda.adam_lucie_verena.bataillejavale.core.model.ShipType;
 import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
 import school.coda.adam_lucie_verena.bataillejavale.gui.AssetsManager;
 import school.coda.adam_lucie_verena.bataillejavale.gui.component.MenuButton;
-
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 /**
- * Interface de configuration tactique permettant de définir les paramètres de la partie.
- * Gère la dimension des grilles, la composition de la flotte, la difficulté de l'IA
- * et la validation des contraintes d'espace.
+ * Interface de configuration tactique "Command Center".
+ * Gère la persistance complète des réglages de mission.
  */
-public class ConfigView extends HBox {
-    private static final Integer MAX_SIZE = 26;
-    private static final Integer MIN_SIZE = 5;
+public class ConfigView extends StackPane {
+
+    private static final int MIN_SIZE = 5;
+    private static final String SPINNER_STYLE = "-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: #06b6d4; -fx-border-radius: 5;";
 
     private final Pane gridDrawingPane = new Pane();
     private final Map<ShipType, Spinner<Integer>> shipSpinners = new EnumMap<>(ShipType.class);
-    private final Text capacityLabel = new Text();
+    private final Map<String, CheckBox> eventToggles = new HashMap<>();
+    private final Map<String, Slider> eventSliders = new HashMap<>();
+
     private Slider sliderWidth, sliderHeight;
     private Label lblWidthText, lblHeightText;
+    private Difficulty selectedDifficulty;
+    private final BooleanProperty isSalveMode = new SimpleBooleanProperty(false);
+    private Text difficultyDesc, modeDesc;
+    private final Text capacityLabel = new Text();
     private Button btnNext;
-    private Difficulty selectedDifficulty = Difficulty.NORMAL;
+
+    private final CheckBox cbCustomFleet = new CheckBox("PERSONNALISER LE NOMBRE DE NAVIRES");
+    private final CheckBox cbEnableEvents = new CheckBox("ACTIVER LES ÉVÉNEMENTS ALÉATOIRES");
+    private final CheckBox cbSpecialAbilities = new CheckBox("ACTIVER LES CAPACITÉS SPÉCIALES");
+    private final VBox statsPanel = new VBox(10);
+    private Spinner<Integer> apocRoundSpinner;
 
     /**
-     * Initialise la vue de configuration avec les réglages par défaut.
-     * @param currentConfig Configuration initiale du jeu.
-     * @param onValid Callback exécuté lors du passage au déploiement.
-     * @param onBack Callback exécuté lors du retour au menu principal.
+     * @param currentConfig Configuration à charger pour restauration.
+     * @param onValid       Action lors du lancement de la bataille.
+     * @param onBack        Action de retour au menu principal.
      */
     public ConfigView(GameConfig currentConfig, Consumer<GameConfig> onValid, Runnable onBack) {
+        this.selectedDifficulty = currentConfig.difficulty();
+        this.isSalveMode.set(currentConfig.isSalveMode());
+
         this.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
-        this.setPadding(new Insets(50));
-        this.setSpacing(60);
-        this.setAlignment(Pos.CENTER);
         this.setStyle(Theme.MAIN_GRADIENT);
 
-        this.getChildren().addAll(buildMapSection(currentConfig, onBack), buildFleetSection(currentConfig, onValid));
+        // ScrollPane transparent sans barre visible
+        ScrollPane scroll = new ScrollPane();
+        scroll.setFitToWidth(true);
+        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+
+        VBox mainContainer = new VBox(50);
+        mainContainer.setPadding(new Insets(50));
+        mainContainer.setAlignment(Pos.TOP_CENTER);
+
+        // Restauration des états
+        this.cbCustomFleet.setSelected(currentConfig.isCustomFleet());
+        this.cbEnableEvents.setSelected(currentConfig.eventsEnabled());
+        this.cbSpecialAbilities.setSelected(currentConfig.abilitiesEnabled());
+
+        FlowPane topSection = new FlowPane(60, 40);
+        topSection.setAlignment(Pos.CENTER);
+        topSection.getChildren().addAll(buildMapSection(currentConfig, onBack), buildFleetSection(currentConfig, onValid));
+
+        mainContainer.getChildren().addAll(topSection, buildMissionSettingsSection(currentConfig));
+        scroll.setContent(mainContainer);
+        this.getChildren().add(scroll);
+
         updateCapacity();
+        calculatePercentages();
     }
 
-    /**
-     * Construit la section de gauche dédiée aux dimensions du théâtre d'opérations.
-     * @param config Configuration actuelle pour les valeurs par défaut.
-     * @param onBack Action de retour au QG.
-     * @return Conteneur vertical de la section cartographique.
-     */
     private VBox buildMapSection(GameConfig config, Runnable onBack) {
         VBox box = createTacticalPanel("SYSTÈME DE CARTOGRAPHIE");
+        box.setPrefWidth(550);
 
         sliderWidth = createNeonSlider(config.gridWidth());
         sliderHeight = createNeonSlider(config.gridHeight());
-
         lblWidthText = createStyledLabel("DIMENSION X : " + config.gridWidth());
         lblHeightText = createStyledLabel("DIMENSION Y : " + config.gridHeight());
 
-        StackPane previewContainer = new StackPane(gridDrawingPane);
-        previewContainer.setPrefSize(400, 400);
-        previewContainer.setStyle(Theme.PREVIEW_HOLDER);
-
         sliderWidth.valueProperty().addListener((o, old, v) -> {
             lblWidthText.setText("DIMENSION X : " + v.intValue());
-            updateGridPreview(v.intValue(), (int)sliderHeight.getValue());
+            updateGridPreview(v.intValue(), (int) sliderHeight.getValue());
             updateCapacity();
         });
 
         sliderHeight.valueProperty().addListener((o, old, v) -> {
             lblHeightText.setText("DIMENSION Y : " + v.intValue());
-            updateGridPreview((int)sliderWidth.getValue(), v.intValue());
+            updateGridPreview((int) sliderWidth.getValue(), v.intValue());
             updateCapacity();
         });
 
-        Stream.of(sliderHeight, sliderWidth).forEach(s -> {
-            s.setOnMousePressed(_ -> AssetsManager.playSFX("button.wav", 1.0));
-            s.setOnMouseReleased(_ -> AssetsManager.playSFX("button.wav", 0.8));
-        });
-
         Button btnResetGrid = new Button("RÉINITIALISER TAILLE (10x10)");
-        styleReset(btnResetGrid, "#64748b");
+        styleResetButton(btnResetGrid);
         btnResetGrid.setOnAction(_ -> {
-            AssetsManager.playSFX("reset.wav", 1.0);
             sliderWidth.setValue(10);
             sliderHeight.setValue(10);
         });
 
         updateGridPreview(config.gridWidth(), config.gridHeight());
-
-        MenuButton btnBack = new MenuButton("RETOUR AU QG", onBack);
-
-        box.getChildren().addAll(lblWidthText, sliderWidth, lblHeightText, sliderHeight, btnResetGrid, previewContainer, btnBack);
+        box.getChildren().addAll(lblWidthText, sliderWidth, lblHeightText, sliderHeight, btnResetGrid,
+                new StackPane(gridDrawingPane) {{
+                    setPrefSize(400, 400);
+                    setStyle(Theme.PREVIEW_HOLDER);
+                }},
+                new MenuButton("RETOUR AU QG", onBack));
         return box;
     }
 
-    /**
-     * Construit la section de droite dédiée à l'arsenal et aux paramètres de l'IA.
-     * @param config Configuration actuelle.
-     * @param onValid Action de validation finale.
-     * @return Conteneur vertical de la section arsenal.
-     */
     private VBox buildFleetSection(GameConfig config, Consumer<GameConfig> onValid) {
         VBox box = createTacticalPanel("ARSENAL & DOCTRINE");
+        box.setPrefWidth(550);
 
-        VBox diffBox = new VBox(10);
         HBox diffButtons = new HBox(10);
-        ToggleGroup group = new ToggleGroup();
+        ToggleGroup dg = new ToggleGroup();
+        for (Difficulty d : Difficulty.values()) diffButtons.getChildren().add(createDifficultyButton(d, dg));
+        difficultyDesc = createDescText();
+        updateDifficultyDescription();
 
-        for (Difficulty d : Difficulty.values()) {
-            diffButtons.getChildren().add(createDifficultyButton(d, group, diffButtons));
-        }
+        HBox modeButtons = new HBox(10);
+        ToggleGroup mg = new ToggleGroup();
+        modeButtons.getChildren().addAll(createModeButton("CLASSIQUE", false, mg), createModeButton("SALVE", true, mg));
+        modeDesc = createDescText();
+        updateModeDescription();
 
-        diffBox.getChildren().addAll(createStyledLabel("NIVEAU DE L'OPPOSITION :"), diffButtons);
-
-        capacityLabel.setFont(Theme.font(16, FontWeight.BOLD));
+        cbCustomFleet.setTextFill(Color.WHITE);
+        cbCustomFleet.setFont(Theme.font(14, FontWeight.BOLD));
         VBox fleetList = new VBox(12);
-        for (ShipType type : ShipType.values()) {
+        for (ShipType type : ShipType.values())
             fleetList.getChildren().add(createShipConfigCard(type, config.shipCounts().getOrDefault(type, 1)));
-        }
 
-        Button btnResetFleet = new Button("RÉINITIALISER FLOTTE (1 DE CHAQUE)");
-        styleReset(btnResetFleet, "#64748b");
-        btnResetFleet.setOnAction(_ -> {
-            AssetsManager.playSFX("reset.wav", 1.0);
-            shipSpinners.values().forEach(s -> s.getValueFactory().setValue(1));
-            updateCapacity();
-        });
+        fleetList.visibleProperty().bind(cbCustomFleet.selectedProperty());
+        fleetList.managedProperty().bind(fleetList.visibleProperty());
+        capacityLabel.visibleProperty().bind(cbCustomFleet.selectedProperty());
+        capacityLabel.managedProperty().bind(capacityLabel.visibleProperty());
+
+        Button btnResetFleet = new Button("RÉINITIALISER FLOTTE");
+        styleResetButton(btnResetFleet);
+        btnResetFleet.visibleProperty().bind(cbCustomFleet.selectedProperty());
+        btnResetFleet.managedProperty().bind(btnResetFleet.visibleProperty());
+        btnResetFleet.setOnAction(_ -> shipSpinners.values().forEach(s -> s.getValueFactory().setValue(1)));
 
         btnNext = new Button("INITIALISER LA BATAILLE");
         btnNext.setPrefWidth(400);
         btnNext.setMinHeight(60);
         btnNext.setFont(Theme.font(20, FontWeight.BOLD));
-        btnNext.setOnAction(_ -> {
-            AssetsManager.playSFX("good.wav", 1);
-            Map<ShipType, Integer> counts = new EnumMap<>(ShipType.class);
-            shipSpinners.forEach((type, spinner) -> counts.put(type, spinner.getValue()));
-            onValid.accept(new GameConfig((int)sliderWidth.getValue(), (int)sliderHeight.getValue(),
-                    selectedDifficulty, false, false, "Amiral", "IA", counts));
-        });
+        btnNext.setOnAction(_ -> handleGameLaunch(onValid));
 
-        box.getChildren().addAll(diffBox, new Separator(), capacityLabel, fleetList, btnResetFleet, btnNext);
+        box.getChildren().addAll(createStyledLabel("NIVEAU IA :"), diffButtons, difficultyDesc,
+                createStyledLabel("DOCTRINE :"), modeButtons, modeDesc,
+                new Separator(), cbCustomFleet, capacityLabel, fleetList, btnResetFleet, btnNext);
+        return box;
+    }
+
+    private VBox buildMissionSettingsSection(GameConfig config) {
+        VBox box = createTacticalPanel("PARAMÈTRES DES ÉVÉNEMENTS");
+        box.setMaxWidth(1160);
+
+        cbSpecialAbilities.visibleProperty().bind(isSalveMode.not());
+        cbSpecialAbilities.managedProperty().bind(cbSpecialAbilities.visibleProperty());
+
+        HBox coreLayout = new HBox(50);
+        coreLayout.setAlignment(Pos.TOP_CENTER);
+        coreLayout.visibleProperty().bind(cbEnableEvents.selectedProperty());
+        coreLayout.managedProperty().bind(coreLayout.visibleProperty());
+
+        GridPane grid = new GridPane();
+        grid.setHgap(30);
+        grid.setVgap(15);
+        int r = 0;
+        addEventRow(grid, "Rien ne se passe", config, r++, "Stabilité totale du secteur.");
+        addEventRow(grid, "Brouillage", config, r++, "Brouille les logs radar.");
+        addEventRow(grid, "Pluie de météores", config, r++, "Dégâts orbitaux aléatoires.");
+        addEventRow(grid, "Ravitaillement", config, r++, "Recharge les capacités spéciales.");
+        addEventRow(grid, "Ravitaillement gratuit", config, r++, "Bonus logistique sans perte de tour.");
+        addEventRow(grid, "Blocage capacité", config, r++, "Désactive temporairement les compétences.");
+        addEventRow(grid, "Salve boostée", config, r++, "Augmente le quota de tirs (Mode Salve).");
+
+        VBox statsBox = new VBox(15, createStyledLabel("PROBABILITÉS RÉELLES (BASE 100%)"), statsPanel);
+        statsBox.setPadding(new Insets(20));
+        statsBox.setStyle("-fx-background-color: rgba(15, 23, 42, 0.7); -fx-border-color: #334155; -fx-border-radius: 10;");
+        statsBox.setMinWidth(350);
+
+        coreLayout.getChildren().addAll(grid, statsBox);
+
+        apocRoundSpinner = new Spinner<>(2, 100, config.apocalypseRound());
+        apocRoundSpinner.getStyleClass().add(Spinner.STYLE_CLASS_SPLIT_ARROWS_HORIZONTAL);
+        apocRoundSpinner.setStyle(SPINNER_STYLE);
+
+        CheckBox toggleApoc = new CheckBox("Activer") {{
+            setSelected(config.isEventActive("Apocalypse"));
+            textFillProperty().set(Color.WHITE);
+        }};
+        eventToggles.put("Apocalypse", toggleApoc);
+
+        HBox apocBox = new HBox(20, createStyledLabel("DÉBUT APOCALYPSE (MANCHE) :"), toggleApoc, apocRoundSpinner);
+        apocBox.setAlignment(Pos.CENTER);
+        apocBox.visibleProperty().bind(cbEnableEvents.selectedProperty());
+        apocBox.managedProperty().bind(apocBox.visibleProperty());
+
+        Button btnResetEvents = new Button("RÉINITIALISER LES ÉVÉNEMENTS");
+        styleResetButton(btnResetEvents);
+        btnResetEvents.setOnAction(_ -> resetEvents());
+
+        box.getChildren().addAll(cbEnableEvents, cbSpecialAbilities, new Separator(), coreLayout, apocBox, btnResetEvents);
         return box;
     }
 
     /**
-     * Crée un bouton de sélection de difficulté avec retour visuel néon.
-     * @param d Difficulté associée.
-     * @param group Groupe de boutons exclusifs.
-     * @param container Conteneur parent pour rafraîchir les styles.
-     * @return ToggleButton configuré.
+     * Collecte les données de l'interface et déclenche le callback de lancement.
      */
-    private ToggleButton createDifficultyButton(Difficulty d, ToggleGroup group, HBox container) {
-        ToggleButton tb = new ToggleButton(d.getLabel().toUpperCase());
-        tb.setToggleGroup(group);
-        tb.setPrefWidth(130);
-        tb.setCursor(Theme.CURSOR_CLICK);
-        tb.setUserData(d);
+    private void handleGameLaunch(Consumer<GameConfig> onValid) {
+        AssetsManager.playSFX("button_init.wav", 1.0);
 
-        updateDifficultyButtonStyle(tb, d == selectedDifficulty);
+        Map<ShipType, Integer> counts = new EnumMap<>(ShipType.class);
+        shipSpinners.forEach((t, s) -> counts.put(t, s.getValue()));
 
-        tb.setOnAction(_ -> {
-            AssetsManager.playSFX("button.wav", 1.0);
-            selectedDifficulty = d;
-            container.getChildren().forEach(node -> {
-                if (node instanceof ToggleButton btn) {
-                    updateDifficultyButtonStyle(btn, btn.isSelected());
+        Map<String, Integer> weights = new HashMap<>();
+        Map<String, Boolean> toggles = new HashMap<>();
+
+        eventSliders.forEach((name, s) -> weights.put(name, (int) s.getValue()));
+        eventToggles.forEach((name, cb) -> toggles.put(name, cb.isSelected()));
+
+        onValid.accept(new GameConfig(
+                (int) sliderWidth.getValue(), (int) sliderHeight.getValue(),
+                selectedDifficulty, isSalveMode.get(), cbEnableEvents.isSelected(),
+                cbSpecialAbilities.isSelected(), cbCustomFleet.isSelected(),
+                weights, toggles, apocRoundSpinner.getValue(), "Amiral", "IA", counts
+        ));
+    }
+
+    private void addEventRow(GridPane grid, String name, GameConfig config, int row, String desc) {
+        CheckBox cb = new CheckBox() {{
+            setSelected(config.isEventActive(name));
+            if (name.equals("Rien ne se passe")) setDisable(true);
+        }};
+        Slider s = new Slider(0, 100, config.getWeight(name));
+        s.setPrefWidth(150);
+        Label val = new Label((int) s.getValue() + " pts");
+        val.setTextFill(Theme.CYAN);
+        val.setPrefWidth(50);
+
+        s.valueProperty().addListener((o, old, v) -> {
+            val.setText(v.intValue() + " pts");
+            calculatePercentages();
+        });
+        cb.selectedProperty().addListener((o, old, v) -> calculatePercentages());
+        s.disableProperty().bind(cb.selectedProperty().not());
+
+        eventToggles.put(name, cb);
+        eventSliders.put(name, s);
+
+        HBox controlBox = new HBox(15, cb, new VBox(2, createStyledLabel(name.toUpperCase()), new Text(desc) {{
+            setFill(Theme.TEXT_MUTED);
+            setFont(Theme.font(10, FontWeight.NORMAL));
+        }}));
+        controlBox.setAlignment(Pos.CENTER_LEFT);
+
+        if (name.equals("Salve boostée")) controlBox.visibleProperty().bind(isSalveMode);
+        else if (name.contains("capacité") || name.contains("Ravitaillement"))
+            controlBox.visibleProperty().bind(isSalveMode.not().and(cbSpecialAbilities.selectedProperty()));
+
+        controlBox.managedProperty().bind(controlBox.visibleProperty());
+        s.visibleProperty().bind(controlBox.visibleProperty());
+        s.managedProperty().bind(s.visibleProperty());
+        val.visibleProperty().bind(controlBox.visibleProperty());
+        val.managedProperty().bind(val.visibleProperty());
+
+        grid.addRow(row, controlBox, s, val);
+    }
+
+    private void calculatePercentages() {
+        statsPanel.getChildren().clear();
+        double total = eventSliders.entrySet().stream()
+                .filter(e -> eventToggles.get(e.getKey()).isSelected() && e.getValue().isVisible())
+                .mapToDouble(e -> e.getValue().getValue()).sum();
+
+        if (total == 0) {
+            addStatLine("RIEN NE SE PASSE (Sécurité)", 99.0, Color.GRAY);
+        } else {
+            double factor = 99.0 / total;
+            eventSliders.forEach((name, s) -> {
+                if (eventToggles.get(name).isSelected() && s.isVisible()) {
+                    double pct = s.getValue() * factor;
+                    if (pct > 0) addStatLine(name, pct, Color.WHITE);
                 }
             });
-        });
-
-        return tb;
-    }
-
-    /**
-     * Met à jour l'apparence des boutons de difficulté.
-     * @param btn Le bouton cible.
-     * @param isActive État de sélection.
-     */
-    private void updateDifficultyButtonStyle(ToggleButton btn, boolean isActive) {
-        if (isActive) {
-            btn.setStyle(Theme.BTN_NEXT_ACTIVE);
-            btn.setEffect(Theme.GLOW_CYAN);
-        } else {
-            btn.setStyle(Theme.BTN_SECONDARY_NORMAL);
-            btn.setEffect(null);
         }
+        addStatLine("JOUR ENSOLEILLÉ (Fixe)", 1.0, Color.GOLD);
     }
 
-    /**
-     * Crée un panneau stylisé avec effet de flou et titre thématique.
-     * @param titleStr Chaîne de caractères du titre.
-     * @return Conteneur VBox stylisé.
-     */
-    private VBox createTacticalPanel(String titleStr) {
-        VBox box = new VBox(25);
-        box.setPadding(new Insets(30));
-        box.setAlignment(Pos.TOP_CENTER);
-        box.setPrefWidth(550);
-        box.setStyle(Theme.GLASS_PANEL);
-
-        Text title = new Text(titleStr);
-        title.setFont(Theme.font(24, FontWeight.BOLD));
-        title.setFill(Theme.CYAN);
-        title.setEffect(Theme.GLOW_CYAN);
-
-        box.getChildren().add(title);
-        return box;
+    private void addStatLine(String name, double pct, Color color) {
+        statsPanel.getChildren().add(new Text(String.format("• %s : %.1f%%", name.toUpperCase(), pct)) {{
+            setFill(color);
+            setFont(Theme.mono(12, FontWeight.BOLD));
+        }});
     }
 
-    /**
-     * Génère un label discret pour les intitulés de réglages.
-     * @param text Texte à afficher.
-     * @return Label stylisé.
-     */
-    private Label createStyledLabel(String text) {
-        Label l = new Label(text);
-        l.setTextFill(Theme.TEXT_MUTED);
-        l.setFont(Theme.font(12, FontWeight.BOLD));
-        return l;
+    private void updateGridPreview(int w, int h) {
+        gridDrawingPane.getChildren().clear();
+        double cellSize = Math.min(360.0 / w, 365.0 / h);
+        Group group = new Group();
+        group.getChildren().add(new Rectangle(w * cellSize, h * cellSize) {{
+            setFill(Color.TRANSPARENT);
+            setStroke(Theme.GRID_FRAME);
+            setStrokeWidth(2);
+        }});
+
+        for (int x = 0; x < w; x++) {
+            int finalX = x;
+            group.getChildren().add(new Text(String.valueOf((char) ('A' + finalX))) {{
+                setFill(Theme.GRID_LABEL);
+                setFont(Theme.font(10, FontWeight.NORMAL));
+                setX(finalX * cellSize + (cellSize / 2) - 4);
+                setY(-8);
+            }});
+            for (int y = 0; y < h; y++) {
+                if (x == 0) {
+                    int finalY = y;
+                    group.getChildren().add(new Text(String.valueOf(finalY + 1)) {{
+                        setFill(Theme.GRID_LABEL);
+                        setFont(Theme.font(10, FontWeight.NORMAL));
+                        setX(-22);
+                        setY(finalY * cellSize + (cellSize / 2) + 4);
+                    }});
+                }
+                group.getChildren().add(new Rectangle(x * cellSize, y * cellSize, cellSize, cellSize) {{
+                    setFill(Theme.GRID_BG);
+                    setStroke(Theme.GRID_LINE);
+                }});
+            }
+        }
+        group.setTranslateX((400 - w * cellSize + 30) / 2.0);
+        group.setTranslateY((400 - h * cellSize + 25) / 2.0);
+        gridDrawingPane.getChildren().add(group);
     }
 
-    /**
-     * Crée un élément de configuration pour un navire avec spinner interactif.
-     * @param type Type de navire.
-     * @param initial Quantité de départ.
-     * @return HBox contenant la carte du navire.
-     */
+    private ToggleButton createModeButton(String label, boolean isSalve, ToggleGroup g) {
+        return new ToggleButton(label) {{
+            setToggleGroup(g);
+            setPrefWidth(180);
+            if (isSalve == isSalveMode.get()) {
+                setSelected(true);
+                updateButtonStyle(this, true);
+            }
+            setOnAction(_ -> {
+                AssetsManager.playSFX("button.wav", 1.0);
+                isSalveMode.set(isSalve);
+                updateModeDescription();
+                g.getToggles().forEach(t -> updateButtonStyle((ToggleButton) t, t.isSelected()));
+            });
+        }};
+    }
+
+    private ToggleButton createDifficultyButton(Difficulty d, ToggleGroup g) {
+        return new ToggleButton(d.getLabel().toUpperCase()) {{
+            setToggleGroup(g);
+            setPrefWidth(120);
+            if (d == selectedDifficulty) {
+                setSelected(true);
+                updateButtonStyle(this, true);
+            }
+            setOnAction(_ -> {
+                AssetsManager.playSFX("button.wav", 1.0);
+                selectedDifficulty = d;
+                updateDifficultyDescription();
+                g.getToggles().forEach(t -> updateButtonStyle((ToggleButton) t, t.isSelected()));
+            });
+        }};
+    }
+
     private HBox createShipConfigCard(ShipType type, int initial) {
-        HBox card = new HBox(15);
-        card.setAlignment(Pos.CENTER_LEFT);
-        card.setPadding(new Insets(12, 20, 12, 20));
-        card.setStyle(Theme.CARD_STYLE);
+        Spinner<Integer> s = new Spinner<>(0, 10, initial) {{
+            setPrefWidth(100);
+            getStyleClass().add(Spinner.STYLE_CLASS_SPLIT_ARROWS_HORIZONTAL);
+            setStyle(SPINNER_STYLE);
+            valueProperty().addListener((o, old, v) -> updateCapacity());
+        }};
+        shipSpinners.put(type, s);
 
-        VBox info = new VBox(2);
         Text name = new Text(type.getName().toUpperCase());
         name.setFill(Color.WHITE);
         name.setFont(Theme.font(14, FontWeight.BOLD));
 
-        Text sizeInfo = new Text("ENCOMBREMENT : " + type.getSize() + " UNITÉS");
-        sizeInfo.setFill(Theme.SHIP_INFO);
+        Text sizeInfo = new Text(String.format("[%d %s]",
+                type.getSize(),
+                type.getSize() > 1 ? "CASES" : "CASE"));
+        sizeInfo.setFill(Theme.CYAN);
         sizeInfo.setFont(Theme.font(10, FontWeight.NORMAL));
-        info.getChildren().addAll(name, sizeInfo);
+        sizeInfo.setOpacity(0.8);
 
-        Spinner<Integer> spinner = new Spinner<>(0, 10, initial);
-        spinner.setPrefWidth(90);
-        spinner.getStyleClass().add(Spinner.STYLE_CLASS_SPLIT_ARROWS_HORIZONTAL);
+        HBox infoBox = new HBox(10, name, sizeInfo);
+        infoBox.setAlignment(Pos.CENTER_LEFT);
 
-        spinner.valueProperty().addListener((o, old, v) -> updateCapacity());
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        spinner.setOnMouseClicked(_ -> AssetsManager.playSFX("button.wav", 1.0));
-
-        shipSpinners.put(type, spinner);
-
-        Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
-        card.getChildren().addAll(info, spacer, spinner);
-        return card;
+        return new HBox(15, infoBox, spacer, s) {{
+            setAlignment(Pos.CENTER_LEFT);
+            setPadding(new Insets(10, 20, 10, 20));
+            setStyle(Theme.CARD_STYLE);
+        }};
     }
 
-    /**
-     * Évalue la capacité de la grille par rapport au nombre de navires sélectionnés.
-     * Bloque le passage à la bataille si la flotte occupe plus de 30% de l'espace.
-     */
+    private void updateModeDescription() {
+        modeDesc.setText(isSalveMode.get() ? "MODE SALVE : Tirs multiples. [!] Pas de ravitaillement ni capacités." : "MODE CLASSIQUE : Tour par tour. [✓] Ravitaillement et capacités disponibles.");
+    }
+
+    private void updateDifficultyDescription() {
+        difficultyDesc.setText(selectedDifficulty == Difficulty.EASY ? "RECRUE : L'IA tire au hasard." : selectedDifficulty == Difficulty.NORMAL ? "TACTICIEN : L'IA traque après impact." : "LÉGENDE : Analyse probabiliste avancée.");
+    }
+
     private void updateCapacity() {
-        int w = (int) sliderWidth.getValue();
-        int h = (int) sliderHeight.getValue();
-        int max = (int) ((w * h) * 0.30);
-        int used = shipSpinners.entrySet().stream().mapToInt(e -> e.getKey().getSize() * e.getValue().getValue()).sum();
-
-        boolean isOverloaded = used > max;
-        capacityLabel.setText(isOverloaded ? "☢ ALERTE : SURCHARGE FLOTTE (" + used + "/" + max + ")" : "✓ CAPACITÉ OPÉRATIONNELLE (" + used + "/" + max + ")");
-        capacityLabel.setFill(isOverloaded ? Theme.RED_ALERTE : Theme.GREEN_SUCCESS);
-
-        btnNext.setDisable(isOverloaded);
-        btnNext.setStyle(isOverloaded ? Theme.BTN_NEXT_DISABLED : Theme.BTN_NEXT_ACTIVE);
-        btnNext.setEffect(isOverloaded ? null : Theme.GLOW_CYAN);
-        btnNext.setCursor(isOverloaded ? javafx.scene.Cursor.DEFAULT : Theme.CURSOR_CLICK);
+        int w = (int) sliderWidth.getValue(), h = (int) sliderHeight.getValue(), max = (int) ((w * h) * 0.30), used = shipSpinners.entrySet().stream().mapToInt(e -> e.getKey().getSize() * e.getValue().getValue()).sum();
+        boolean inv = used > max || used == 0;
+        capacityLabel.setText(used == 0 ? "⚠ ARSENAL VIDE" : (inv ? "☢ SURCHARGE (" + used + "/" + max + ")" : "✓ OPÉRATIONNEL (" + used + "/" + max + ")"));
+        capacityLabel.setFill(inv ? Theme.RED_ALERTE : Theme.GREEN_SUCCESS);
+        btnNext.setDisable(inv);
     }
 
-    /**
-     * Configure un curseur de sélection avec le style visuel néon du thème.
-     * @param val Valeur initiale.
-     * @return Slider configuré.
-     */
+    private void resetEvents() {
+        eventSliders.forEach((k, v) -> v.setValue(k.equals("Rien ne se passe") ? 80 : k.equals("Brouillage") ? 20 : (k.contains("capacité") || k.equals("Salve boostée")) ? 10 : 5));
+        eventToggles.values().forEach(cb -> cb.setSelected(true));
+        apocRoundSpinner.getValueFactory().setValue(30);
+        calculatePercentages();
+    }
+
+    private void updateButtonStyle(ToggleButton b, boolean a) {
+        b.setStyle(a ? Theme.BTN_NEXT_ACTIVE : Theme.BTN_SECONDARY_NORMAL);
+        b.setEffect(a ? Theme.GLOW_CYAN : null);
+    }
+
+    private VBox createTacticalPanel(String t) {
+        return new VBox(25, new Text(t) {{
+            setFont(Theme.font(24, FontWeight.BOLD));
+            setFill(Theme.CYAN);
+            setEffect(Theme.GLOW_CYAN);
+        }}) {{
+            setPadding(new Insets(30));
+            setAlignment(Pos.TOP_CENTER);
+            setStyle(Theme.GLASS_PANEL);
+        }};
+    }
+
+    private Label createStyledLabel(String t) {
+        return new Label(t) {{
+            setTextFill(Theme.TEXT_MUTED);
+            setFont(Theme.font(12, FontWeight.BOLD));
+        }};
+    }
+
+    private Text createDescText() {
+        return new Text() {{
+            setFill(Theme.TEXT_MUTED);
+            setFont(Theme.font(11, FontWeight.NORMAL));
+            setWrappingWidth(450);
+        }};
+    }
+
     private Slider createNeonSlider(int val) {
-        Slider s = new Slider(MIN_SIZE, MAX_SIZE, val);
-        s.setMaxWidth(400); s.setMajorTickUnit(1); s.setSnapToTicks(true);
-        s.setStyle("-fx-control-inner-background: " + Theme.HEX_CYAN + ";");
-        return s;
+        return new Slider(MIN_SIZE, 26, val) {{
+            setMaxWidth(400);
+            setStyle("-fx-control-inner-background: #06b6d4;");
+        }};
     }
 
-    /**
-     * Met à jour dynamiquement le rendu graphique de la grille de prévisualisation.
-     * @param w Nombre de colonnes.
-     * @param h Nombre de lignes.
-     */
-    private void updateGridPreview(int w, int h) {
-        gridDrawingPane.getChildren().clear();
-        double containerSize = 400.0;
-        double labelPaddingLeft = 30.0;
-        double labelPaddingTop = 25.0;
-        double margin = 10.0;
-
-        double availableWidth = containerSize - labelPaddingLeft - margin;
-        double availableHeight = containerSize - labelPaddingTop - margin;
-        double cellSize = Math.min(availableWidth / w, availableHeight / h);
-
-        double gridWidth = w * cellSize;
-        double gridHeight = h * cellSize;
-
-        Group gridGroup = new Group();
-        Rectangle frame = new Rectangle(0, 0, gridWidth, gridHeight);
-        frame.setFill(Color.TRANSPARENT);
-        frame.setStroke(Theme.GRID_FRAME);
-        frame.setStrokeWidth(2);
-        gridGroup.getChildren().add(frame);
-
-        for (int x = 0; x < w; x++) {
-            Text letter = new Text(String.valueOf((char) ('A' + x)));
-            letter.setFill(Theme.GRID_LABEL);
-            letter.setFont(Theme.font(10, FontWeight.NORMAL));
-            letter.setX(x * cellSize + (cellSize / 2) - 4);
-            letter.setY(-8);
-            gridGroup.getChildren().add(letter);
-
-            for (int y = 0; y < h; y++) {
-                if (x == 0) {
-                    Text number = new Text(String.valueOf(y + 1));
-                    number.setFill(Theme.GRID_LABEL);
-                    number.setFont(Theme.font(10, FontWeight.NORMAL));
-                    number.setX(-22);
-                    number.setY(y * cellSize + (cellSize / 2) + 4);
-                    gridGroup.getChildren().add(number);
-                }
-                Rectangle r = new Rectangle(x * cellSize, y * cellSize, cellSize, cellSize);
-                r.setFill(Theme.GRID_BG);
-                r.setStroke(Theme.GRID_LINE);
-                gridGroup.getChildren().add(r);
-            }
-        }
-        gridGroup.setTranslateX((containerSize - gridWidth + labelPaddingLeft) / 2.0);
-        gridGroup.setTranslateY((containerSize - gridHeight + labelPaddingTop) / 2.0);
-        gridDrawingPane.getChildren().add(gridGroup);
-    }
-
-    /**
-     * Applique un style standard aux boutons d'administration de la configuration.
-     * @param b Bouton à styliser.
-     * @param hex Couleur de fond hexadécimale.
-     */
-    private void styleReset(Button b, String hex) {
+    private void styleResetButton(Button b) {
         b.setPrefWidth(240);
-        b.setStyle("-fx-background-color: " + hex + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8; -fx-background-radius: 5;");
+        b.setStyle("-fx-background-color: #64748b; -fx-text-fill: white; -fx-font-weight: bold;");
     }
 }

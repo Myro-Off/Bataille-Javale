@@ -53,4 +53,14 @@ public class CombatFeedbackManager {
     public void logRound(int roundNumber) {
         logView.addLog(":: ROUND " + roundNumber + " ::", Color.GOLD);
     }
+
+    /**
+     * Ajoute un message personnalisé dans le journal de combat.
+     * @param message Le texte à afficher.
+     * @param color La couleur du texte.
+     */
+    public void logEvent(String message, javafx.scene.paint.Color color) {
+        // Si ta méthode dans GameLogView s'appelle autrement (ex: addMessage), change-la ici
+        logView.addLog(message, color);
+    }
 }

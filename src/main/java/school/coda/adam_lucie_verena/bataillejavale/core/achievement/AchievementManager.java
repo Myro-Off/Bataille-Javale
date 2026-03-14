@@ -9,6 +9,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+/**
+ * Gestionnaire central des succès et des statistiques persistantes.
+ */
 public class AchievementManager {
 
     private static final String SAVE_FILE = System.getProperty("user.home") + File.separator + ".bataille_javale_stats.dat";
@@ -31,6 +34,9 @@ public class AchievementManager {
         this.notificationView = view;
     }
 
+    /**
+     * Traite les résultats d'une partie.
+     */
     public void onGameEnd(boolean won, int rounds, int shots, int hits, Difficulty difficulty) {
         totalGamesPlayed++;
 
@@ -38,18 +44,15 @@ public class AchievementManager {
             totalWins++;
             currentWinStreak++;
 
-            // Séries de victoires
             if (currentWinStreak >= 3) unlock(AchievementType.STREAK_3);
             if (currentWinStreak >= 5) unlock(AchievementType.STREAK_5);
 
             unlock(AchievementType.FIRST_WIN);
             if (rounds < 36) unlock(AchievementType.FAST_WIN);
 
-            // Précision
             double accuracy = shots > 0 ? (double) hits / shots * 100 : 0;
             checkGradeAchievements(accuracy);
 
-            // Difficulté
             switch (difficulty) {
                 case EASY -> unlock(AchievementType.WIN_EASY);
                 case NORMAL -> unlock(AchievementType.WIN_NORMAL);
@@ -59,7 +62,6 @@ public class AchievementManager {
             currentWinStreak = 0;
         }
 
-        // Paliers Vétéran (Cohérence avec l'Enum)
         if (totalGamesPlayed >= 10) unlock(AchievementType.VETERAN_10);
         if (totalGamesPlayed >= 50) unlock(AchievementType.VETERAN_50);
         if (totalGamesPlayed >= 100) unlock(AchievementType.VETERAN_100);
@@ -67,11 +69,14 @@ public class AchievementManager {
         saveData();
     }
 
+    public void unlockKonamiCode() { unlock(AchievementType.KONAMI_CODE); }
+    public void onWinSalve() { unlock(AchievementType.WIN_SALVE); }
+    public void onTuiComplete() { unlock(AchievementType.TUI_MASTER); }
+
     public void trackHitStreak(boolean hit) {
         if (hit) {
             currentHitStreak++;
             if (currentHitStreak > maxHitStreak) maxHitStreak = currentHitStreak;
-
             if (currentHitStreak >= 5) unlock(AchievementType.SHARP_SHOOTER);
             else if (currentHitStreak >= 2) unlock(AchievementType.BEGINNER_SHOOTER);
         } else {
@@ -90,11 +95,13 @@ public class AchievementManager {
         if (accuracy >= 20) unlock(AchievementType.GRADE_C);
     }
 
+    public void onMeteorSunkShip() { unlock(AchievementType.METEOR_KILL); }
+    public void unlockSunnyDay() { unlock(AchievementType.SUNNY_DAY); }
+
     public void unlock(AchievementType type) {
         if (!unlockedAchievements.containsKey(type.name())) {
             unlockedAchievements.put(type.name(), LocalDateTime.now().format(DATE_FORMATTER));
             saveData();
-
             if (notificationView != null) {
                 Platform.runLater(() -> notificationView.showAchievement(type));
             }
@@ -144,15 +151,7 @@ public class AchievementManager {
         }
     }
 
-    public boolean isUnlocked(AchievementType type) {
-        return unlockedAchievements.containsKey(type.name());
-    }
-
-    public String getUnlockDate(AchievementType type) {
-        return unlockedAchievements.getOrDefault(type.name(), "NON DÉFINIE");
-    }
-
+    public boolean isUnlocked(AchievementType type) { return unlockedAchievements.containsKey(type.name()); }
+    public String getUnlockDate(AchievementType type) { return unlockedAchievements.getOrDefault(type.name(), "NON DÉFINIE"); }
     public int getCurrentStreak() { return currentWinStreak; }
-    public int getTotalWins() { return totalWins; }
-    public int getTotalGamesPlayed() { return totalGamesPlayed; }
 }
