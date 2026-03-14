@@ -26,4 +26,6 @@ le menu principal.
   - Nombre de navires si souhaité
   - Événements aléatoires et apocalypse modulables
 
-Notes : Implémentation à 95% du système de ravitaillement + capacité, mais bug critique empêchant de le push avant minuit :/
+Notes : 
+- Implémentation à 95% du système de ravitaillement + capacité, mais bug critique empêchant de le push avant minuit :/
+- Base de donnée présente, mais incomplète et inutile à ce stade
