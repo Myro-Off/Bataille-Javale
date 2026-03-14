@@ -96,9 +96,6 @@ public class CombatView extends StackPane {
         playerStats.setFont(Theme.mono(12, FontWeight.BOLD));
         left.getChildren().addAll(playerFleet, playerStats);
 
-        if (!config.isSalveMode()) {
-            left.getChildren().add(new SpecialAbilitiesView());
-        }
         uiLayout.setLeft(left);
 
         // Zone Centrale : Les deux champs de bataille
