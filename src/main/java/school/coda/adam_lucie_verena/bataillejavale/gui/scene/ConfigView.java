@@ -79,6 +79,10 @@ public class ConfigView extends StackPane {
         this.cbEnableEvents.setSelected(currentConfig.eventsEnabled());
         this.cbSpecialAbilities.setSelected(currentConfig.abilitiesEnabled());
 
+        this.cbSpecialAbilities.selectedProperty().addListener((o, old, v) -> calculatePercentages());
+        this.isSalveMode.addListener((o, old, v) -> calculatePercentages());
+        this.cbEnableEvents.selectedProperty().addListener((o, old, v) -> calculatePercentages());
+
         FlowPane topSection = new FlowPane(60, 40);
         topSection.setAlignment(Pos.CENTER);
         topSection.getChildren().addAll(buildMapSection(currentConfig, onBack), buildFleetSection(currentConfig, onValid));
@@ -291,10 +295,20 @@ public class ConfigView extends StackPane {
         grid.addRow(row, controlBox, s, val);
     }
 
+    private boolean isEventEligible(String name) {
+        if (name.equals("Salve boostée")) return isSalveMode.get();
+
+        if (name.contains("capacité") || name.contains("Ravitaillement")) {
+            return !isSalveMode.get() && cbSpecialAbilities.isSelected();
+        }
+
+        return true;
+    }
+
     private void calculatePercentages() {
         statsPanel.getChildren().clear();
         double total = eventSliders.entrySet().stream()
-                .filter(e -> eventToggles.get(e.getKey()).isSelected() && e.getValue().isVisible())
+                .filter(e -> eventToggles.get(e.getKey()).isSelected() && isEventEligible(e.getKey()))
                 .mapToDouble(e -> e.getValue().getValue()).sum();
 
         if (total == 0) {
@@ -302,7 +316,7 @@ public class ConfigView extends StackPane {
         } else {
             double factor = 99.0 / total;
             eventSliders.forEach((name, s) -> {
-                if (eventToggles.get(name).isSelected() && s.isVisible()) {
+                if (eventToggles.get(name).isSelected() && isEventEligible(name)) {
                     double pct = s.getValue() * factor;
                     if (pct > 0) addStatLine(name, pct, Color.WHITE);
                 }
