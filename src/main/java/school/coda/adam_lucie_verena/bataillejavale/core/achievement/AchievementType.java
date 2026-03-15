@@ -17,7 +17,6 @@ public enum AchievementType {
     // --- SUCCÈS SECRETS & MODES (PROF) ---
     KONAMI_CODE("SECRET : KONAMI CODE", "U, U, D, D, L, R, L, R, B, A.", 1),
     WIN_SALVE("SALVE DE VICTOIRE", "Remportez une bataille en mode Salve.", 1),
-    TUI_MASTER("TERMINAL COMMANDER", "Terminez une partie via l'interface textuelle.", 1),
 
     // --- SUCCÈS DE SÉRIE DE VICTOIRES (STREAK) ---
     STREAK_3("TRIPLE MENACE", "Enchaînez 3 victoires consécutives.", 3),

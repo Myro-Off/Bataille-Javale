@@ -68,6 +68,7 @@ public class CombatOrchestrator {
 
         if (type == RandomEventType.BROUILLAGE) {
             combatView.getGameLog().setEffect(new GaussianBlur(12));
+            enemyView.setJammed(true);
         }
 
         playerView.updateDisplay();
@@ -85,6 +86,7 @@ public class CombatOrchestrator {
         this.notificationView.hideEvent(type);
         if (type == RandomEventType.BROUILLAGE) {
             combatView.getGameLog().setEffect(null);
+            enemyView.setJammed(false);
         }
         playerView.updateDisplay();
         enemyView.updateDisplay();
@@ -95,6 +97,11 @@ public class CombatOrchestrator {
      */
     public void handlePlayerShot(Coordinate target) {
         if (target == null || controller.getCurrentState() != GameState.PLAYER_TURN || enemyBoard.isAlreadyShot(target)) return;
+
+        if (enemyView.isJammed()) {
+            enemyView.registerJammedClick(target);
+            if (enemyBoard.isAlreadyShot(target)) return;
+        }
 
         List<Ship> sunkBefore = enemyBoard.getShips().stream().filter(Ship::isSunk).collect(Collectors.toList());
         boolean hit = controller.handlePlayerShot(target);

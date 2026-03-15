@@ -268,11 +268,6 @@ public class BattleEngine {
     public List<Coordinate> getLastEnemyMeteors() { return lastEnemyMeteors; }
     public int getShotsFiredThisTurn() { return shotsFiredThisTurn; }
 
-    public int getVolleyCount() {
-        if (boostedVolleyActive) return 5;
-        return (int) playerBoard.getShips().stream().filter(s -> !s.isSunk()).count();
-    }
-
     private double calculateAcc(int s, int h) {
         return s == 0 ? 0.0 : (double) h / s * 100.0;
     }
@@ -287,6 +282,4 @@ public class BattleEngine {
         }
         System.out.println("Capacités spéciales rechargées par le ravitaillement !");
     }
-
-    public boolean isSalveMode() { return salveMode; }
 }

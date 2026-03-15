@@ -16,9 +16,9 @@
 Nous avons implémenté des mécaniques de personnalisation et de gameplay avancées pour répondre aux exigences du cahier des charges :
 
 * **🔄 Mode Salve Tactique (Hard) :** Puissance de feu indexée sur la survie de votre flotte (1 navire opérationnel = 1 tir). Un tournant stratégique majeur par rapport au jeu classique.
-* **☢️ Moteur d'Anomalies Aléatoires :**
-  * **Brouillage Radar** : Effet visuel "glitch" et masquage des données de tir/historique.
-  * **Pluie de Météores** : Frappes environnementales synchronisées sur les deux plateaux (rendu visuel).
+* **☢️ Moteur d'Événements Aléatoires :**
+  * **Brouillage Radar** : Masquage des données de tir/historique.
+  * **Pluie de Météores** : Frappes environnementales synchronisées sur les deux plateaux.
   * **Protocole Apocalypse** : Déclenchement automatique au tour 30 (changement d'atmosphère et intensité critique).
   * **Salve Boostée** : Événement augmentant temporairement la puissance de feu.
   * **Bonus Passifs** : Ravitaillement gratuit et capacités bloquées intégrés au flux.

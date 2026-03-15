@@ -31,7 +31,8 @@ public class AssetsManager {
      * @return L'objet Texture correspondant.
      */
     public static Texture loadTexture(String name) {
-        return TEXTURE_CACHE.computeIfAbsent(name, k -> FXGL.getAssetLoader().loadTexture(k));
+        Texture original = TEXTURE_CACHE.computeIfAbsent(name, k -> FXGL.getAssetLoader().loadTexture(k));
+        return original.copy();
     }
 
     /**

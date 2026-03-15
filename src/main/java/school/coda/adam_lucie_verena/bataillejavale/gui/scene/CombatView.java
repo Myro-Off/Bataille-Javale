@@ -31,9 +31,7 @@ public class CombatView extends StackPane {
     private final GameLogView gameLog;
     private final FleetStatusView playerFleet, enemyFleet;
     private final GameView playerGrid, enemyGrid;
-    private final GameConfig config;
 
-    private final Pane vfxOverlay = new Pane();
     private final BorderPane uiLayout = new BorderPane();
     private final VBox notificationLayer = new VBox();
 
@@ -58,12 +56,12 @@ public class CombatView extends StackPane {
         this.gameLog = log;
         this.playerFleet = pFleet;
         this.enemyFleet = eFleet;
-        this.config = config;
 
         this.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
         this.setAlignment(Pos.TOP_LEFT);
 
         // Configuration de la couche VFX (transparente aux clics)
+        Pane vfxOverlay = new Pane();
         vfxOverlay.setMouseTransparent(true);
         vfxOverlay.setPickOnBounds(false);
         vfxOverlay.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());

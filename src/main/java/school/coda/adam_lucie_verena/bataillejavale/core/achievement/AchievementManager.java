@@ -69,7 +69,6 @@ public class AchievementManager {
 
     public void unlockKonamiCode() { unlock(AchievementType.KONAMI_CODE); }
     public void onWinSalve() { unlock(AchievementType.WIN_SALVE); }
-    public void onTuiComplete() { unlock(AchievementType.TUI_MASTER); }
 
     public void trackHitStreak(boolean hit) {
         if (hit) {
@@ -81,10 +80,6 @@ public class AchievementManager {
             currentHitStreak = 0;
         }
         saveData();
-    }
-
-    public void resetMidGameStats() {
-        this.currentHitStreak = 0;
     }
 
     private void checkGradeAchievements(double accuracy) {
