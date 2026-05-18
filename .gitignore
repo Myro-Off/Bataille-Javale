@@ -34,5 +34,12 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Generated
 logs/
+
+# Secret
 .env
+
+# audit
+.repository-analysis/
