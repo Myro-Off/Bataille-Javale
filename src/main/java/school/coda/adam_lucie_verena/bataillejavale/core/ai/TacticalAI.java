@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+// 💡 C'est bien d'expliquer et mentionner le nom de la technique utilisée (Heatmap)
+// Je reste sur ma faim. J'aurais aimé avoir des URL avec @see vers les ressources utilisées.
 /**
  * Intelligence artificielle de niveau Expert utilisant une carte de probabilités (Heatmap).
  * L'algorithme calcule pour chaque case le nombre de configurations de navires

@@ -7,7 +7,8 @@ import java.util.function.Supplier;
  * Ce réglage influence l'algorithme de sélection des cibles utilisé par l'IA.
  */
 public enum Difficulty {
-
+    // 👍 Bonne pratique de documenter les valeurs d'enum.
+    // On peut ainsi choisir celle qui nous comvient lorqu'on utilise l'auto-complétion
     /**
      * Mode Débutant : L'IA sélectionne des coordonnées de manière totalement aléatoire.
      * Elle ne possède aucune mémoire des coups précédents.
