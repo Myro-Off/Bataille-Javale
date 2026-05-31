@@ -3,6 +3,8 @@ package school.coda.adam_lucie_verena.bataillejavale.core.data;
 import com.almasb.fxgl.logging.Logger;
 import java.sql.*;
 
+// 🚨 Code pas encore utilisé
+// Le joueur est juste créé. Il n'est jamais lu ou modifié après ça.
 /**
  * DAO pour la gestion des joueurs.
  */

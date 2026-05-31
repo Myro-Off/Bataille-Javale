@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+// 🚨 Code pas encore utilisé
 /**
  * Gestionnaire de connectivité PostgreSQL.
  */

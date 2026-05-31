@@ -87,6 +87,8 @@ public class BatailleJavaleApp extends GameApplication {
         }
 
         config = GameConfig.createDefault();
+
+        // 🚨 Code "au cas où" (pas encore utilisé)
         DatabaseManager.testConnection();
         new PlayerDAO().getOrCreatePlayer(config.player1Name());
 
