@@ -24,6 +24,9 @@ public record GameConfig(
         String player2Name,
         Map<ShipType, Integer> shipCounts
 ) {
+    // 💡 Utilisation du design pattern "Factory method"
+    // 👍 Rend l'intention explicite : c'est la configuration par défaut
+    // Voir : https://refactoring.guru/fr/design-patterns/factory-method
     /**
      * @return Une configuration standard (10x10, IA Normale, Événements actifs).
      */
