@@ -22,6 +22,8 @@ public class MainMenuView extends StackPane {
 
     private final Pane parallaxLayer = new Pane();
 
+    // 💡 Bonne idée de séparer les actions dans des Runnable
+    // Les actions peuvent être réutilisées
     public MainMenuView(Runnable onPlay, Runnable onStats) {
         setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
 
