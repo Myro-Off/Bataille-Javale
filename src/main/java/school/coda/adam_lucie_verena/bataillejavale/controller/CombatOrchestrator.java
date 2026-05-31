@@ -32,6 +32,8 @@ public class CombatOrchestrator {
     private final CombatFeedbackManager feedback;
     private final NotificationView notificationView;
 
+    // 👍 inversion de contrôle par constructeur
+
     /**
      * Initialise l'orchestrateur et lie les événements du moteur à l'interface.
      */
