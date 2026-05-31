@@ -17,6 +17,8 @@ public interface AIStrategy {
      * @param enemyBoard Le plateau de l'adversaire (joueur humain) pour analyser les coups précédents.
      * @return La {@link Coordinate} choisie par l'IA pour son prochain tir.
      */
+    // 💡 Pourrait retourner un Optional<Coordinate> plutôt que null pour clarifier le contrat
+    // Et forcer l'appelant de gérer explicitement quand ça arrive
     Coordinate chooseTarget(Board enemyBoard);
 
     /**
