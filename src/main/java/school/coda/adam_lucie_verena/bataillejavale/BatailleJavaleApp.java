@@ -80,6 +80,8 @@ public class BatailleJavaleApp extends GameApplication {
         }
 
         try {
+            // 💡 "mainmenu.mp3" pourrait être une constante ou une enum
+            // 0.2 pourrait être une constante ex. DEFAULT_MAIN_MENU_VOLUME
             AssetsManager.playMusic("mainmenu.mp3", 0.2);
             Thread.sleep(1000);
         } catch (InterruptedException e) {
