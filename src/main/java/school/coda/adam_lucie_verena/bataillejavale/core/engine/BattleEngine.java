@@ -36,6 +36,7 @@ public class BattleEngine {
     private int roundNumber = 1;
 
     private double accuracyModifier = 0.0;
+    // 🚨 Code mort (jamais utilisé)
     private boolean fogActive = false;
     private boolean skipNextTurn = false;
     private boolean specialAbilitiesBlocked = false;
@@ -209,6 +210,7 @@ public class BattleEngine {
         this.eventManager.update();
     }
 
+    // 🚨 Code mort (jamais utilisé)
     public void setAccuracyModifier(double modifier) { this.accuracyModifier = modifier; }
     public void setFogActive(boolean active) {
         this.fogActive = active;
@@ -254,11 +256,14 @@ public class BattleEngine {
     public double getEnemyAccuracy() { return calculateAcc(totalEnemyShots, totalEnemyHits); }
     public RandomEventManager getEventManager() { return eventManager; }
     public AchievementManager getAchievementManager() { return achievementManager; }
+    // 🚨 Code mort (jamais utilisé)
     public boolean areAbilitiesBlocked() { return specialAbilitiesBlocked; }
     public List<Coordinate> getLastPlayerMeteors() { return lastPlayerMeteors; }
+    // 🚨 Code mort (jamais utilisé)
     public List<Coordinate> getLastEnemyMeteors() { return lastEnemyMeteors; }
     public int getShotsFiredThisTurn() { return shotsFiredThisTurn; }
 
+    // 🚨 Code mort (jamais utilisé)
     public int getVolleyCount() {
         if (boostedVolleyActive) return 5;
         return (int) playerBoard.getShips().stream().filter(s -> !s.isSunk()).count();
@@ -279,5 +284,6 @@ public class BattleEngine {
         System.out.println("Capacités spéciales rechargées par le ravitaillement !");
     }
 
+    // 🚨 Code mort (jamais utilisé)
     public boolean isSalveMode() { return salveMode; }
 }

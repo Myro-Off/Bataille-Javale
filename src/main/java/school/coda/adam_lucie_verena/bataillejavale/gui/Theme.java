@@ -1,15 +1,20 @@
 package school.coda.adam_lucie_verena.bataillejavale.gui;
 
 import javafx.scene.Cursor;
+// 🚨 Code mort (non utilisé)
 import javafx.scene.ImageCursor;
+// 🚨 Code mort (non utilisé)
 import javafx.scene.SnapshotParameters;
 import javafx.scene.effect.DropShadow;
+// 🚨 Code mort (non utilisé)
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+// 🚨 Code mort (non utilisé)
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
+// 🚨 Attention à nettoyer de code non utilisé
 /**
  * Référentiel central du design de l'application.
  * Contient l'intégralité des styles et des outils graphiques.
@@ -30,6 +35,7 @@ public class Theme {
     public static final Color GRID_LINE = CYAN.deriveColor(0, 1, 1, 0.2);
     public static final Color GRID_BG = CYAN.deriveColor(0, 1, 1, 0.1);
     public static final Color GRID_FRAME = CYAN.deriveColor(0, 1, 1, 0.8);
+    // 🚨 Code mort (jamais utilisé)
     public static final Color SHIP_INFO = CYAN.deriveColor(0, 1, 1, 0.6);
 
     // --- STYLES DE PANNEAUX (CSS) ---
@@ -41,12 +47,14 @@ public class Theme {
 
     // --- STYLES DE BOUTONS ---
     public static final String BTN_NEXT_ACTIVE = "-fx-background-color: " + HEX_CYAN + "; -fx-text-fill: #020617; -fx-background-radius: 8;";
+    // 🚨 Code mort (jamais utilisé)
     public static final String BTN_NEXT_DISABLED = "-fx-background-color: #334155; -fx-text-fill: #64748b; -fx-background-radius: 8;";
     public static final String BTN_SECONDARY_NORMAL = "-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-border-color: #475569; -fx-border-radius: 5;";
     public static final String BTN_SECONDARY_HOVER = "-fx-background-color: rgba(255,255,255,0.05); -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 5;";
 
     // --- EFFETS ---
     public static final DropShadow GLOW_CYAN = new DropShadow(15, CYAN);
+    // 🚨 Code mort (jamais utilisé)
     public static final DropShadow GLOW_RED = new DropShadow(15, RED_ALERTE);
     public static final DropShadow GLOW_LARGE_CYAN = new DropShadow(20, CYAN);
     public static final DropShadow GLOW_LARGE_RED = new DropShadow(20, RED_ALERTE);
@@ -56,9 +64,13 @@ public class Theme {
     public static final Cursor CURSOR_CLICK = Cursor.HAND;
 
     // --- LOGS ---
+    // 🚨 Code mort (jamais utilisé)
     public static final Color LOG_HIT = Color.web("#ff4757");
+    // 🚨 Code mort (jamais utilisé)
     public static final Color LOG_MISS = Color.web("#94a3b8");
+    // 🚨 Code mort (jamais utilisé)
     public static final Color LOG_SUNK = Color.web("#ff9f43");
+    // 🚨 Code mort (jamais utilisé)
     public static final Color LOG_SYSTEM = Color.web("#00d2d3");
 
     public static Font font(double size, FontWeight weight) {
