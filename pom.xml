@@ -7,7 +7,7 @@
     <groupId>school.coda.adam_lucie_verena</groupId>
     <artifactId>Bataille-javale</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>Bataille-javale</name>
+    <name>Bataille-javale-b</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
