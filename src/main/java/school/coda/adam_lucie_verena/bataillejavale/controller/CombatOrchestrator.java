@@ -41,10 +41,10 @@ public class CombatOrchestrator {
                               GameView pView, GameView eView, CombatView combatView,
                               NotificationView notificationView) {
         this.controller = controller;
-        this.playerBoard = pBoard;
-        this.enemyBoard = eBoard;
-        this.playerView = pView;
-        this.enemyView = eView;
+        this.playerBoard = pBoard; // 👈 pas besoin d'abréger les noms d'arguments
+        this.enemyBoard = eBoard; // 👈 pas besoin d'abréger les noms d'arguments
+        this.playerView = pView; // 👈 pas besoin d'abréger les noms d'arguments
+        this.enemyView = eView; // 👈 pas besoin d'abréger les noms d'arguments
         this.combatView = combatView;
         this.notificationView = notificationView;
         this.feedback = new CombatFeedbackManager(combatView.getGameLog());

@@ -56,6 +56,7 @@ public class ConfigView extends StackPane {
      * @param onValid       Action lors du lancement de la bataille.
      * @param onBack        Action de retour au menu principal.
      */
+    //                             🚨 pourrait être mieux nommé. Ex. onLaunchBattle
     public ConfigView(GameConfig currentConfig, Consumer<GameConfig> onValid, Runnable onBack) {
         this.selectedDifficulty = currentConfig.difficulty();
         this.isSalveMode.set(currentConfig.isSalveMode());
@@ -128,7 +129,7 @@ public class ConfigView extends StackPane {
                 new MenuButton("RETOUR AU QG", onBack));
         return box;
     }
-
+    //                                   🚨 pourrait être mieux nommé. Ex. onLaunchBattle
     private VBox buildFleetSection(GameConfig config, Consumer<GameConfig> onValid) {
         VBox box = createTacticalPanel("ARSENAL & DOCTRINE");
         box.setPrefWidth(550);
@@ -243,6 +244,8 @@ public class ConfigView extends StackPane {
         eventSliders.forEach((name, s) -> weights.put(name, (int) s.getValue()));
         eventToggles.forEach((name, cb) -> toggles.put(name, cb.isSelected()));
 
+        // 🚨 Pourrait être mieux nommé
+        // Ex. onLaunchBattle
         onValid.accept(new GameConfig(
                 (int) sliderWidth.getValue(), (int) sliderHeight.getValue(),
                 selectedDifficulty, isSalveMode.get(), cbEnableEvents.isSelected(),
