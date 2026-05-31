@@ -147,6 +147,23 @@ public class CombatOrchestrator {
         } else {
             cleanupEndGame();
         }
+        // 💡 En règle générale, les conditions sur des types énumérés peuvent être affichés par des switch
+        // Vous pouvez utiliser le refactoring "Invert if condition" sur
+        // else if (controller.getCurrentState() != GameState.GAME_OVER) {
+        // Ensuite cela débloque le réfactoring "Replace if with switch"
+        // Le même code avec un switch "moderne"
+        // A vous de voir si c'est plus lisible (c'est à votre appréciation)
+        // switch (controller.getCurrentState()) {
+        //     case AI_TURN -> {
+        //         combatView.updateTurnInfo(false);
+        //         triggerAIReprisal();
+        //     }
+        //     case GAME_OVER -> cleanupEndGame();
+        //     default -> {
+        //         int remaining = controller.getShotsAllowed() - controller.getShotsFiredThisTurn();
+        //         combatView.showCombatNotification("SALVE : " + remaining + " TIRS RESTANTS", Theme.CYAN, false);
+        //     }
+        // }
     }
 
     /**
