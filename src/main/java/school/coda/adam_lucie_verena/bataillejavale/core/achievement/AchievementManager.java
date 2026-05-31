@@ -24,6 +24,9 @@ public class AchievementManager {
     private int currentHitStreak = 0;
     private int maxHitStreak = 0;
 
+    // 💡 AchievementManager pourrait être découplé de la GUI
+    // grâce à l'event-bus (voir plus bas)
+    // Si on décide d'implémenter une TUI, on n'aurait pas de raison d'appeler NotificationView
     private NotificationView notificationView;
 
     public AchievementManager() {
@@ -102,6 +105,9 @@ public class AchievementManager {
         if (!unlockedAchievements.containsKey(type.name())) {
             unlockedAchievements.put(type.name(), LocalDateTime.now().format(DATE_FORMATTER));
             saveData();
+            // 💡 Ici, on pourrait utiliser L'event bus
+            // FXGL.getEventBus().fireEvent(new AchievementUnlockedEvent(type));
+            // Voir du côté de BatailleJavaleApp::initUI() pour l'initialisation de l'event handler
             if (notificationView != null) {
                 Platform.runLater(() -> notificationView.showAchievement(type));
             }

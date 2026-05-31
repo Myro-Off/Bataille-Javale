@@ -92,10 +92,14 @@ public class BatailleJavaleApp extends GameApplication {
         DatabaseManager.testConnection();
         new PlayerDAO().getOrCreatePlayer(config.player1Name());
 
+        // 💡 Utilisation du Design-pattern Observateur (sous la forme d'un Event Bus)
+        // Voir https://refactoring.guru/fr/design-patterns/observer
         FXGL.getEventBus().addEventHandler(GameOverEvent.ANY, event -> Platform.runLater(() -> {
             if (notificationView != null) notificationView.clearEvents();
 
             switchUI(new GameOverView(
+                    // 💡 on pourrait passer un GameOverEvent directement au lieu de
+                    // event.isVictory(), event.getTotalShots(), event.getTotalHits(),event.getStreak(),
                     event.isVictory(),
                     event.getTotalShots(),
                     event.getTotalHits(),
@@ -118,7 +122,14 @@ public class BatailleJavaleApp extends GameApplication {
         FXGL.addUINode(settingsOverlay);
 
         settingsOverlay.setPrefWidth(FXGL.getAppWidth());
+        // 💡 On peut éviter de passer la notificationView dans le achievementManager
+        // grâce au bus d'événement
         achievementManager.setNotificationView(notificationView);
+
+        // 💡 La gestion des notifications lorsqu'un achievement est dévérouillé peut se faire ici.
+        // FXGL.getEventBus().addEventHandler(AchievementUnlockedEvent.ANY, event -> Platform.runLater(() -> {
+        //     notificationView.showAchievement(event.type);
+        // }));
     }
 
     @Override

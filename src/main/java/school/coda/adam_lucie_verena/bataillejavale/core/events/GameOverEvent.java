@@ -8,6 +8,8 @@ import javafx.event.EventType;
  * Transporte l'ensemble des statistiques finales (résultat, tirs, impacts et série)
  * du moteur de jeu vers l'interface utilisateur.
  */
+// 🚨 GameOverEvent n'est pas un événement au sens des événements aléatoires
+// Il devrait se situer dans un autre package pour éviter la confusion
 public class GameOverEvent extends Event {
 
     /** Type d'événement générique pour la fin de partie. */
