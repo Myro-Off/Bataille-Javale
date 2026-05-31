@@ -432,7 +432,18 @@ public class ConfigView extends StackPane {
     }
 
     private void updateDifficultyDescription() {
+        // 🚨 Les ternaires imbriquées sont compliquées à lire
         difficultyDesc.setText(selectedDifficulty == Difficulty.EASY ? "RECRUE : L'IA tire au hasard." : selectedDifficulty == Difficulty.NORMAL ? "TACTICIEN : L'IA traque après impact." : "LÉGENDE : Analyse probabiliste avancée.");
+        // 💡 Comme elles s'appuient sur des valeurs d'enum, une switch expression est souvent plus lisible
+        // Ex.
+        // String difficultyDescription = switch (selectedDifficulty) {
+        //     case EASY -> "RECRUE : L'IA tire au hasard.";
+        //     case NORMAL -> "TACTICIEN : L'IA traque après impact.";
+        //     default -> "LÉGENDE : Analyse probabiliste avancée.";
+        // };
+        // difficultyDesc.setText(difficultyDescription);
+
+
     }
 
     private void updateCapacity() {

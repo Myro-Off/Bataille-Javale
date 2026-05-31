@@ -101,7 +101,12 @@ public class CombatOrchestrator {
      * Gère la logique de tir du joueur, incluant la gestion du mode Salve.
      */
     public void handlePlayerShot(Coordinate target) {
-        if (target == null || controller.getCurrentState() != GameState.PLAYER_TURN || enemyBoard.isAlreadyShot(target)) return;
+        // 💡 Formater les conditions complexes ligne par ligne peut aider à la lecture
+        if (target == null
+            || controller.getCurrentState() != GameState.PLAYER_TURN
+            || enemyBoard.isAlreadyShot(target)) {
+            return;
+        }
 
         // 🚨 Demeter law : enemyBoard.getSunkShips();
         // 💡 Formater les streams ligne par ligne peut aider à la lecture
@@ -195,6 +200,12 @@ public class CombatOrchestrator {
             } else {
                 checkRoundTransition();
             }
+            // 💡 Pourrait être représenté par un switch moderne
+            // switch (controller.getCurrentState()) {
+            //     case AI_TURN   -> triggerAIReprisal(); // On relance pour le tir suivant de la salve
+            //     case GAME_OVER -> cleanupEndGame();
+            //     default        -> checkRoundTransition();
+            // }
             updateUI();
         });
         pause.play();

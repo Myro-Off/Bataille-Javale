@@ -37,7 +37,14 @@ public record GameConfig(
                 "Ravitaillement gratuit", "Blocage capacité", "Salve boostée", "Apocalypse"};
 
         for (String e : events) {
+            // 🚨 Pas très facile à comprendre
             weights.put(e, e.equals("Rien ne se passe") ? 80 : e.equals("Brouillage") ? 20 : 5);
+            // 💡 Pourrait être plus lisible avec un switch ?. Ex.
+            // switch (e) {
+            //     case "Rien ne se passe" -> weights.put(e, 80);
+            //     case "Brouillage" -> weights.put(e, 20);
+            //     default -> weights.put(e, 5);
+            // }
             toggles.put(e, true);
         }
 
