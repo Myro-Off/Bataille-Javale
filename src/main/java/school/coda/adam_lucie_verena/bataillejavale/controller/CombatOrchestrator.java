@@ -70,6 +70,8 @@ public class CombatOrchestrator {
         }
 
         if (type == RandomEventType.BROUILLAGE) {
+            // 🚨 Demeter law / 💩 Feature envy
+            // Ex. combatView.blurLog();
             combatView.getGameLog().setEffect(new GaussianBlur(12));
         }
 
@@ -87,6 +89,8 @@ public class CombatOrchestrator {
     private void handleEventEnded(RandomEventType type) {
         this.notificationView.hideEvent(type);
         if (type == RandomEventType.BROUILLAGE) {
+            // 🚨 Demeter law / 💩 Feature envy
+            // Ex. combatView.unBlurLog();
             combatView.getGameLog().setEffect(null);
         }
         playerView.updateDisplay();
@@ -99,7 +103,12 @@ public class CombatOrchestrator {
     public void handlePlayerShot(Coordinate target) {
         if (target == null || controller.getCurrentState() != GameState.PLAYER_TURN || enemyBoard.isAlreadyShot(target)) return;
 
-        List<Ship> sunkBefore = enemyBoard.getShips().stream().filter(Ship::isSunk).collect(Collectors.toList());
+        // 🚨 Demeter law : enemyBoard.getSunkShips();
+        // 💡 Formater les streams ligne par ligne peut aider à la lecture
+        List<Ship> sunkBefore = enemyBoard.getShips().stream()
+                .filter(Ship::isSunk)
+                .collect(Collectors.toList());
+
         boolean hit = controller.handlePlayerShot(target);
         Ship newlySunk = getNewlySunkShip(enemyBoard, sunkBefore);
 
@@ -141,11 +150,25 @@ public class CombatOrchestrator {
 
         PauseTransition pause = new PauseTransition(Duration.millis(800));
         pause.setOnFinished(_ -> {
-            List<Ship> sunkBefore = playerBoard.getShips().stream().filter(Ship::isSunk).collect(Collectors.toList());
+            // 🚨 Demeter law
+            // 💩 Code smell : Feature envy
+            // Voir : https://refactoring.guru/fr/smells/feature-envy
+            // playerBoard.getSunkShips();
+            // 💡 Formater les streams ligne par ligne peut aider à la lecture
+            List<Ship> sunkBefore = playerBoard.getShips().stream()
+                    .filter(Ship::isSunk)
+                    .collect(Collectors.toList());
+            // 🚨 controller.aiTurn(); pourrait retourner un optional
             Coordinate target = controller.aiTurn();
 
             if (target != null) {
+                // 🚨 Demeter
+                // 💩 Code smell : Feature envy
+                // playerBoard.wasShotAt(target);
                 boolean hit = playerBoard.getHitShots().contains(target);
+
+                // 💩 Code smell : Feature envy
+                // Ship newlySunk = playerBoard.getNewlySunkShip(sunkBefore);
                 Ship newlySunk = getNewlySunkShip(playerBoard, sunkBefore);
 
                 playerView.updateDisplay();
@@ -179,6 +202,8 @@ public class CombatOrchestrator {
      * Désactive les effets de brouillage et nettoie les notifications lors de la fin de partie.
      */
     private void cleanupEndGame() {
+        // 🚨 Demeter law / 💩 Feature envy
+        // Ex. combatView.unBlurLog();
         combatView.getGameLog().setEffect(null);
         notificationView.clearEvents();
         playerView.updateDisplay();
@@ -202,6 +227,7 @@ public class CombatOrchestrator {
         );
     }
 
+    // 🚨 Pourrait être déplacée dans la classe Board
     private Ship getNewlySunkShip(Board board, List<Ship> previouslySunk) {
         return board.getShips().stream()
                 .filter(s -> s.isSunk() && !previouslySunk.contains(s))
