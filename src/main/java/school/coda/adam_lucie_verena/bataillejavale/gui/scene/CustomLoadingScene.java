@@ -32,6 +32,7 @@ import javafx.util.Duration;
  */
 public class CustomLoadingScene extends LoadingScene {
 
+    // 🚨 Commentaire inutile : les variables sont suffisament explicites
     // ------------------------------------------------------------------------------------------
     // CONSTANTES VISUELLES
     // ------------------------------------------------------------------------------------------
@@ -40,6 +41,7 @@ public class CustomLoadingScene extends LoadingScene {
     private static final String FONT_FAMILY = "Verdana";
     private static final double RADAR_RADIUS = 60.0;
 
+    // 🚨 Commentaire inutile : on sait que c'est un constructeur
     // ------------------------------------------------------------------------------------------
     // CONSTRUCTEUR
     // ------------------------------------------------------------------------------------------
@@ -51,6 +53,7 @@ public class CustomLoadingScene extends LoadingScene {
         int width = getAppWidth();
         int height = getAppHeight();
 
+        // 🚨 Commentaire inutile
         // 1. FOND ET STRUCTURE
         StackPane root = new StackPane();
         root.setPrefSize(width, height);
@@ -59,6 +62,7 @@ public class CustomLoadingScene extends LoadingScene {
         VBox content = new VBox(25);
         content.setAlignment(Pos.CENTER);
 
+        // 🚨 Commentaire inutile
         // 2. ASSEMBLAGE DES COMPOSANTS
         content.getChildren().addAll(
                 createTitle(),
@@ -71,6 +75,7 @@ public class CustomLoadingScene extends LoadingScene {
         getContentRoot().getChildren().add(root);
     }
 
+    // 🚨 Commentaire inutile
     // ------------------------------------------------------------------------------------------
     // MÉTHODES PRIVÉES : CONSTRUCTION DES COMPOSANTS
     // ------------------------------------------------------------------------------------------
