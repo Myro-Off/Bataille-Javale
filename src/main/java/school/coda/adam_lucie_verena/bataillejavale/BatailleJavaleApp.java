@@ -215,6 +215,10 @@ public class BatailleJavaleApp extends GameApplication {
         enemyView.setOnMouseClicked(e -> {
             Coordinate target = enemyView.getGridCoordinate(e.getX(), e.getY());
             battleManager.handlePlayerShot(target);
+            // 💡 Si enemyView.getGridCoordinate(...) retourn un Optional<Coordinate>
+            // Pourrait s'écrire ainsi :
+            // enemyView.getGridCoordinate(e.getX(), e.getY())
+            //          .ifPresent(battleManager::handlePlayerShot);
         });
 
         switchUI(combatView);
