@@ -170,6 +170,8 @@ public class CombatOrchestrator {
      * Déclenche une riposte automatique de l'IA, capable d'enchaîner plusieurs tirs en mode Salve.
      */
     private void triggerAIReprisal() {
+        // 👍 Bon réflexe : Guard clause
+        // Voir : https://refactoring.guru/fr/replace-nested-conditional-with-guard-clauses
         if (controller.getCurrentState() != GameState.AI_TURN) return;
 
         PauseTransition pause = new PauseTransition(Duration.millis(800));
@@ -262,7 +264,8 @@ public class CombatOrchestrator {
     private Ship getNewlySunkShip(Board board, List<Ship> previouslySunk) {
         return board.getShips().stream()
                 .filter(s -> s.isSunk() && !previouslySunk.contains(s))
-                .findFirst().orElse(null);
+                .findFirst()
+                .orElse(null);
     }
 
     private String getHexForType(RandomEventType type) {
