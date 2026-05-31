@@ -16,6 +16,8 @@ import javafx.util.Duration;
 import school.coda.adam_lucie_verena.bataillejavale.gui.Theme;
 import school.coda.adam_lucie_verena.bataillejavale.gui.component.MenuButton;
 
+// 👍 Les constructions de composants complexes sont faites dans des méthodes dédiées
+// 👍 Bonne utilisation de l'héritage dans le cas de la création de composants personnalisés
 public class MainMenuView extends StackPane {
 
     private final Pane parallaxLayer = new Pane();
