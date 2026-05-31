@@ -173,6 +173,7 @@ public class GameView extends Pane {
      * @param localY Position Y.
      * @return Coordinate ou null si hors zone.
      */
+    // 🚨 Préférer Optional<Coordinate> plutôt que retourner null
     public Coordinate getGridCoordinate(double localX, double localY) {
         double xInGrid = localX - OFFSET;
         double yInGrid = localY - OFFSET;

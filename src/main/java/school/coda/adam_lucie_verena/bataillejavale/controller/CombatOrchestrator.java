@@ -110,6 +110,8 @@ public class CombatOrchestrator {
                 .collect(Collectors.toList());
 
         boolean hit = controller.handlePlayerShot(target);
+        // 🚨 getNewlySunkShip pourrait retourner un optional
+        // Optional<Ship> newlySunk
         Ship newlySunk = getNewlySunkShip(enemyBoard, sunkBefore);
 
         enemyView.updateDisplay();
@@ -227,6 +229,7 @@ public class CombatOrchestrator {
         );
     }
 
+    // 🚨 Pourrait retourner un Optional<Ship>
     // 🚨 Pourrait être déplacée dans la classe Board
     private Ship getNewlySunkShip(Board board, List<Ship> previouslySunk) {
         return board.getShips().stream()
