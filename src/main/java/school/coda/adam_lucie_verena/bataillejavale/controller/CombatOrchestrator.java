@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
  */
 public class CombatOrchestrator {
 
+    // 👍 private final
     private final BattleEngine controller;
     private final Board playerBoard, enemyBoard;
     private final GameView playerView, enemyView;
