@@ -11,6 +11,9 @@ import school.coda.adam_lucie_verena.bataillejavale.gui.component.GameLogView;
  * Traduit les événements de jeu en entrées textuelles et sonores.
  * Centralise les styles et les messages pour le journal de bord.
  */
+// 👍 Bonne abstraction.
+// Elle évite de réécrire la logique de formatage partout
+// tout en permettant de tracer des textes personnalisés
 public class CombatFeedbackManager {
 
     private final GameLogView logView;

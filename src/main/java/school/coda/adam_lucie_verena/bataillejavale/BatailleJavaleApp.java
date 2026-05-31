@@ -203,10 +203,12 @@ public class BatailleJavaleApp extends GameApplication {
         // Passage de l'objet config complet au moteur
         BattleEngine engine = new BattleEngine(playerBoard, enemyBoard, config, achievementManager);
 
+        // 👍 Bonne réutilisation de code : GameView
         playerView = new GameView(playerBoard, true);
         enemyView = new GameView(enemyBoard, false);
 
         GameLogView log = new GameLogView();
+        // 👍 Bonne réutilisation de code : FleetStatusView
         FleetStatusView playerFleet = new FleetStatusView(playerBoard, "MA FLOTTE", Theme.CYAN);
         FleetStatusView enemyFleet = new FleetStatusView(enemyBoard, "SUIVI FLOTTE ENNEMIE", Theme.RED_ALERTE);
 
