@@ -24,6 +24,8 @@ import java.util.List;
  * Assure la conversion des coordonnées locales en positions globales sur une couche de superposition
  * et gère le cycle de vie des animations de particules (explosions, fumée, éclaboussures).
  */
+// 💡 La classe ne contient que des attributs et méthodes statiques.
+// Elle peut être rendue final
 public class VfxManager {
 
     private static final int CELL_SIZE = 40;

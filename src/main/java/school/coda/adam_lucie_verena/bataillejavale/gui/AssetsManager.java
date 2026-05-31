@@ -11,6 +11,8 @@ import java.util.Map;
  * Gère le cache des textures, le mixage des bruitages et de la musique
  * en appliquant un coefficient Master (Slider) sur les volumes locaux (Code).
  */
+// 💡 La classe ne contient que des attributs et méthodes statiques.
+// Elle peut être rendue final
 public class AssetsManager {
 
     private static Music currentMusic;
