@@ -178,6 +178,9 @@ public class BatailleJavaleApp extends GameApplication {
      * En cas de validation, l'objet 'config' de la classe est mis à jour.
      */
     private void startSoloFlow() {
+        //💡 Pourrait être rendu plus explicite par une référence de méthode
+        //                                                     👇
+        // Ex. switchUI(new ConfigView(this.config, this::onLaunchBattle, this::setupMainMenu));
         switchUI(new ConfigView(this.config, newConfig -> {
             this.config = newConfig; // Sauvegarde des nouveaux réglages
             startPlacementFlow();
